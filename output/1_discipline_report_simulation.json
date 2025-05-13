@@ -1,0 +1,105 @@
+[
+    {
+        "month": 1,
+        "context": "No previous cash flow history available for this user.\n\nNo previous discipline report history available for this user.",
+        "rules_checked": {
+            "expenses_within_income": false,
+            "minimum_savings_met": false,
+            "unnecessary_debt_taken": false
+        },
+        "violations": [
+            "Expenses exceed income",
+            "Minimum savings not met"
+        ],
+        "discipline_score": 2,
+        "recommendations": [
+            "Reduce food and drinks expenses to stay within income",
+            "Set aside a fixed amount for savings to meet the 6-month goal"
+        ]
+    },
+    {
+        "month": 2,
+        "rules_checked": {
+            "expenses_within_income": false,
+            "minimum_savings_met": false,
+            "unnecessary_debt_taken": false
+        },
+        "violations": [
+            "Expenses exceed income",
+            "Minimum savings not met"
+        ],
+        "discipline_score": 2,
+        "recommendations": [
+            "Reduce food and drinks expenses to stay within income",
+            "Set aside a fixed amount for savings to meet the 6-month goal"
+        ]
+    },
+    {
+        "month": 3,
+        "rules-checked": {
+            "expenses_within_income": false,
+            "minimum-savings_met": false,
+            "unnecessary_debt_taken": false
+        },
+        "violations": [
+            "Expenses exceed income",
+            "Minimum savings not met"
+        ],
+        "discipline_score": 2.0,
+        "recommendations": [
+            "Reduce food and drinks expenses to stay within income",
+            "Set aside a fixed amount for savings to meet the 6-month goal"
+        ]
+    },
+    {
+        "month": 3,
+        "rules_checked": {
+            "expenses_within_income": false,
+            "minimum_savings_met": false,
+            "unnecessary_debt_taken": false
+        },
+        "violations": [
+            "expenses exceed income",
+            "minimum savings not met"
+        ],
+        "discipline_score": 0,
+        "recommendations": [
+            "Reduce food and drinks expenses to stay within income",
+            "Set aside a fixed amount for savings to meet the 6-month goal"
+        ]
+    },
+    {
+        "month": 3,
+        "rules_checked": {
+            "expenses_within_income": false,
+            "minimum_savings_met": false,
+            "unnecessary_debt_taken": false
+        },
+        "violations": [
+            "Expenses exceed income",
+            "Minimum savings not met"
+        ],
+        "discipline_score": 2,
+        "recommendations": [
+            "Reduce food and drinks expenses to stay within income",
+            "Set aside a fixed amount for savings to meet the 6-month goal"
+        ]
+    },
+    {
+        "month": 4,
+        "rules_checked": {
+            "expenses_within_income": false,
+            "minimum_savings_met": false,
+            "unnecessary_debt_taken": false
+        },
+        "violations": [
+            "expenses exceed income",
+            "minimum savings not met"
+        ],
+        "discipline_score": 0,
+        "recommendations": [
+            "Reduce food and drinks expenses to stay within income",
+            "Set aside a fixed amount for savings to meet the 6-month goal"
+        ]
+    }
+]

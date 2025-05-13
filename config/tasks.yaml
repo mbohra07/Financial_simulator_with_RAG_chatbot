@@ -1,0 +1,240 @@
+simulate_cashflow_task:
+  description: >
+    <<SYS>>
+    You are a financial cash flow simulator. Always respond ONLY with the final output.
+    NEVER include prep statements like "Now I can answer", "Here's the result", or reasoning.
+    Respond ONLY with valid JSON.
+    <</SYS>>
+
+    The user profile for this simulation is as follows:
+      - Name: {user name}
+      - Monthly Income: {income}
+      - Expenses (list): {expenses}
+      - Total Expenses: {total_expenses}
+      - Financial Goal: {goal}
+      - Financial Type: {financial_type}
+      - Risk Level: {risk_level}
+      - Current Balance: {balance}
+
+    Simulate the user’s income and expenses for the month based on this profile, their goals, financial type, risk level, and current balance. 
+    Use the provided breakdown of expenses and income to populate the output fields. 
+    If any income or expense category is missing, treat it as zero. Tailor notes and savings based on the user’s goal, risk level, and financial type.
+
+    {context}
+    
+  expected_output: |
+    [
+      {
+        "month": number,
+        "income": {
+          "salary": number,
+          "freelance": number,
+          "total": number
+        },
+        "expenses": {
+          "needs": number,
+          "wants": number,
+          "luxury": number,
+          "emergency": number,
+          "total": number
+        },
+        "savings": number,
+        "debt_taken": number,
+        "debt_repaid": number,
+        "notes": "string"
+      }
+    ]
+  agent: emotional_bias_agent
+  output_file: output/simulated_cashflow.json
+  retry_policy:
+    max_retries: 3
+    retry_interval: 45s
+
+discipline_tracker_task:
+  description: >
+    <<SYS>>
+    You are a financial discipline tracking assistant. Always respond ONLY with the final output.
+    NEVER include prep statements like "Now I can answer", "Here's the result", or reasoning.
+    Respond ONLY with valid JSON.
+    <</SYS>>
+
+    Checks whether the user followed basic financial discipline rules for the month — e.g., not overspending, saving the target percentage, avoiding unnecessary debt.
+
+    {context}
+  expected_output: |
+    [
+      {
+        "month": number,
+        "rules_checked": {
+          "expenses_within_income": boolean,
+          "minimum_savings_met": boolean,
+          "unnecessary_debt_taken": boolean
+        },
+        "violations": ["string"],
+        "discipline_score": number, // out of 10
+        "recommendations": ["string"]
+      }
+    ]
+  agent: discipline_tracker_agent
+  output_file: output/discipline_report.json
+  retry_policy:
+    max_retries: 3
+    retry_interval: 45s
+
+track_goals:
+  description: >
+    <<SYS>>
+    You are a financial goal tracking assistant. Always respond ONLY with the final output.
+    NEVER include prep statements like "Now I can answer", "Here's the result", or reasoning.
+    Respond ONLY with valid JSON.
+    <</SYS>>
+
+    Tracks progress toward each user-defined goal by comparing cumulative savings and allocations against the planned targets. Evaluates if goals are on track, ahead, or behind and suggests adjustments.
+    
+    {context}
+
+    Output for the current month only, reflecting the actual trends and context above.
+  expected_output: >
+    [
+      {
+        "month": number,
+        "goals": [
+          {
+            "name": "string",
+            "target_amount": number,
+            "saved_so_far": number,
+            "expected_by_now": number,
+            "status": "ahead" | "on_track" | "behind",
+            "priority": number,
+            "adjustment_suggestion": "string"
+          }
+        ],
+        "summary": {
+          "on_track_goals": number,
+          "behind_goals": number,
+          "total_saved": number,
+          "total_required_by_now": number
+        }
+      }
+    ]
+  agent: goal_tracker_agent
+  output_file: output/goal_status.json
+  retry_policy:
+    max_retries: 3
+    retry_interval: 45s
+
+behavior_tracker_task:
+  description: >
+    <<SYS>>
+    You are a financial behavior tracking assistant. Always respond ONLY with the final output.
+    NEVER include prep statements like "Now I can answer", "Here's the result", or reasoning.
+    Respond ONLY with valid JSON.
+    <</SYS>>
+
+    Analyze the user's financial history and trends in the above context. 
+    Based on their savings, spending, and goal adherence, assign:
+    - "spending_pattern": "saver", "spender", or "inconsistent"
+    - "goal_adherence": "on-track" or "off-track"
+    - "saving_consistency": "consistent", "inconsistent", or "improving"
+    - "labels": List up to 2-3 concise behavioral tags (e.g., "high-expense-ratio", "low-savings-rate", "goal-oriented", "impulsive-spender", "steady-saver").
+
+    {context}
+
+    Output for the current month only, reflecting the actual trends and context above.
+  expected_output: >
+      [
+        {
+          "month": number,
+          traits : {
+            "spending_pattern": "string",
+            "goal_adherence": "string",
+            "saving_consistency": "string",
+            "labels": ["string", "string"]
+          }
+        }
+      ]
+
+  agent: behavior_tracker_agent
+  output_file: output/behavior_tracker.json
+  retry_policy:
+  max_retries: 3
+  retry_interval: 45s
+
+
+karma_tracker_task:
+  description: >
+    <<SYS>>
+    You are a financial behavior tracking assistant. Always respond ONLY with the final output.
+    NEVER include prep statements like "Now I can answer", "Here's the result", or reasoning.
+    Respond ONLY with valid JSON.
+    <</SYS>>
+    
+    Analyze the user's financial and behavioral history above.
+    - Assign **sattvic_traits** for prudent, ethical, goal-oriented, and disciplined financial behaviors (e.g., regular saving, conservative investments, clear goal adherence, low debt, mindful spending).
+    - Assign **rajasic_traits** for ambition, risk-taking, high spending on wants/luxuries, or aggressive investments (e.g., frequent trading, high expense on luxury or non-essentials, chasing returns).
+    - Assign **tamasic_traits** for inertia, avoidance, neglect, or self-sabotaging behaviors (e.g., missed payments, ignoring goals, repeated overspending, lack of planning, or financial procrastination).
+    - Assign a **karma_score** (0-100): Higher for mostly sattvic, lower for tamasic, mixed for rajasic.
+    - Assign a **trend**: "Improving", "Declining", or "Neutral" based on changes in karma_score and trait balance compared to previous months.
+
+    {context}
+
+    Output for the current month only, reflecting the actual trends and context above.
+    
+  expected_output: >
+    [
+      {
+        "month": number,
+        traits : {
+          "sattvic_traits": ["string"],
+          "rajasic_traits": ["string"],
+          "tamasic_traits": ["string"],
+          "karma_score": number,   
+          "trend": "string"
+        }
+    ]
+  
+  agent: karma_tracker_agent
+  output_file: output/karmic_tracker.json
+  frequency: monthly
+  retry_policy:
+    max_retries: 3
+    retry_interval: 60s
+
+financial_strategy_task:
+  description: >
+    <<SYS>>
+    You are a financial simulation assistant. Always respond ONLY with the final output.
+    NEVER include prep statements like "Now I can answer", "Here's the result", or reasoning.
+    Respond ONLY with valid JSON.
+    <</SYS>>
+        
+    Carefully analyze the user's financial history, spending, savings, market conditions, and goal progress above.
+    For the **current month**:
+    - Suggest **adaptive, specific recommendations** to improve financial health and help the user reach their goals. 
+    - Recommendations should be based on actual trends and issues (e.g., overspending, missed savings, high risk, market volatility, changes in income, etc).
+    - If the user is on track, suggest ways to optimize further (e.g., diversify investments, increase savings rate, rebalance allocations).
+    - If the user is behind, suggest corrective actions (e.g., cut specific expenses, adjust savings targets, reduce risk, build emergency fund).
+    - **Reasoning** should briefly explain why these recommendations are appropriate for this month, referencing the user's context.
+
+    {context}
+
+    Output for the current month only, reflecting the actual trends and context above.
+    
+  expected_output: |
+    [ 
+      {
+        "month": number,
+        traits : {
+          "recommendations": [
+            "Cut discretionary spending by 10%",
+            "Increase emergency savings goal by 5%"
+          ],
+          "reasoning": "Overspent on luxury while missing savings target."
+      }
+    ]
+  agent: financial_strategy_agent
+  output_file: output/financial_strategy.json
+  retry_policy: 
+    max_retries: 3
+    retry_interval: 45s
+    

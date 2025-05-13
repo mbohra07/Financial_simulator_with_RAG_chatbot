@@ -1,0 +1,35 @@
+[
+    {
+        "month": 1,
+        "traits": {
+            "recommendations": [
+                "Cut 'Drinks' expense by 15%",
+                "Transfer 10% of income to emergency savings"
+            ],
+            "reasoning": "High expenses on discretionary categories, low savings rate, and medium-term savings goal require proactive adjustments to stay on track."
+        }
+    },
+    {
+        "month": 2,
+        "traits": {
+            "recommendations": [
+                "Reduce discretionary spending by 10%",
+                "Transfer 12% of income to emergency fund",
+                "Invest 5% of income in commodities"
+            ],
+            "reasoning": "Overspent on luxury, missed savings target, and goal progress is behind schedule. Market conditions favor commodities investments."
+        }
+    },
+    {
+        "month": 3,
+        "traits": {
+            "recommendations": [
+                "Cut 'Drinks' expense by 12%",
+                "Transfer 13% of income to emergency savings",
+                "Reduce discretionary spending by 12%",
+                "Invest 6% of income in commodities"
+            ],
+            "reasoning": "Overspent on luxury, and goal progress is behind schedule. Market conditions favor commodities investments, and increasing emergency fund will help in volatile market."
+        }
+    }
+]

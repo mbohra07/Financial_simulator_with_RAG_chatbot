@@ -1,0 +1,12 @@
+[project]
+name = "financial_crew"
+version = "0.1.0"
+description = "Personal finance simulator crew"
+authors = ["Madhuram Bohra <your@email.com>"]
+dependencies = [
+    "uv"
+]
+requires-python = ">=3.12"
+
+[tool.uv]
+# (leave empty or add valid uv options)

@@ -1,0 +1,50 @@
+[
+  {
+    "user_name": "Madhuram Bohra",
+    "month": 1,
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": true
+  },
+  {
+    "user_name": "Madhuram Bohra",
+    "month": 2,
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "user_name": "Madhuram Bohra",
+    "month": 3,
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "user_name": "Madhuram Bohra",
+    "month": 4,
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "user_name": "Madhuram Bohra",
+    "month": 5,
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "user_name": "Madhuram Bohra",
+    "month": 6,
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  }
+]

@@ -1,0 +1,123 @@
+[
+    {
+        "month": 1,
+        "context": "No previous cash flow history available for this user.\n\nNo previous discipline report history available for this user.\n\nNo previous goal status history available for this user.",
+        "goals": [
+            {
+                "name": "Save 30,000 in 6 months",
+                "target_amount": 30000,
+                "saved_so_far": 1000,
+                "expected_by_now": 5000,
+                "status": "behind",
+                "priority": 1,
+                "adjustment_suggestion": "Reduce discretionary spending by 15% to compensate for the slower start. Consider investing in commodities to take advantage of the bullish market conditions."
+            }
+        ],
+        "summary": {
+            "on_track_goals": 0,
+            "behind_goals": 1,
+            "total_saved": 1000,
+            "total_required_by_now": 5000
+        }
+    },
+    {
+        "month": 2,
+        "goals": [
+            {
+                "name": "Save 30,000 in 6 months",
+                "target_amount": 30000,
+                "saved_so_far": 5000,
+                "expected_by_now": 10000,
+                "priority": 1,
+                "adjustment_suggestion": "Reduce discretionary spending by 15% to compensate for the slower start. Consider investing in commodities to take advantage of the bullish market conditions."
+            }
+        ],
+        "summary": {
+            "on_track_goals": 0,
+            "behind_goals": 1,
+            "total_saved": 1000,
+            "total_required_by_now": 10000
+        }
+    },
+    {
+        "month": 3,
+        "goals": [
+            {
+                "name": "Save 30,000 in 6 months",
+                "target_amount": 30000.0,
+                "saved_so_far": 2450.0,
+                "expected_by_now": 15000.0,
+                "status": "behind",
+                "priority": 1,
+                "adjustment_suggestion": "Reduce discretionary spending by 15% to compensate for the slower start. Consider investing in commodities to take advantage of the bullish market conditions."
+            }
+        ],
+        "summary": {
+            "on_track_goals": 0,
+            "behind_goals": 1,
+            "total_saved": 2450.0,
+            "total_required_by_now": 15000.0
+        }
+    },
+    {
+        "month": 3,
+        "goals": [
+            {
+                "name": "Save 30,000 in 6 months",
+                "target_amount": 30000,
+                "saved_so_far": 2450,
+                "expected_by_now": 15000,
+                "status": "behind",
+                "priority": 1,
+                "adjustment_suggestion": "Reduce discretionary spending by 15% to compensate for the slower start. Consider investing in commodities to take advantage of the bullish market conditions."
+            }
+        ],
+        "summary": {
+            "on_track_goals": 0,
+            "behind_goals": 1,
+            "total_saved": 2450,
+            "total_required_by_now": 15000
+        }
+    },
+    {
+        "month": 3,
+        "goals": [
+            {
+                "name": "Save 30,000 in 6 months",
+                "target_amount": 30000,
+                "saved_so_far": 2450,
+                "expected_by_now": 15000,
+                "status": "behind",
+                "priority": 1,
+                "adjustment_suggestion": "Reduce discretionary spending by 15% to compensate for the slower start. Consider investing in commodities to take advantage of the bullish market conditions."
+            }
+        ],
+        "summary": {
+            "on_track_goals": 0,
+            "behind_goals": 1,
+            "total_saved": 2450,
+            "total_required_by_now": 15000
+        }
+    },
+    {
+        "month": 4,
+        "goals": [
+            {
+                "name": "Save 30,000 in 6 months",
+                "target_amount": 30000,
+                "target_date": "6 months",
+                "saved_so_far": 5450,
+                "expected_by_now": 20000,
+                "status": "behind",
+                "priority": 1,
+                "adjustment_suggestion": "Reduce discretionary spending by 15% to compensate for the slower start. Consider investing in commodities to take advantage of the bullish market conditions."
+            }
+        ],
+        "summary": {
+            "on_track_goals": 0,
+            "behind_goals": 1,
+            "total_saved": 5450,
+            "total_required_by_now": 20000
+        }
+    }
+]

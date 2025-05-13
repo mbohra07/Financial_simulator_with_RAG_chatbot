@@ -1,0 +1,72 @@
+[
+    {
+        "month": 1,
+        "traits": {
+            "spending_pattern": "spender",
+            "goal_adherence": "off-track",
+            "labels": [
+                "high-expense-ratio"
+            ]
+        }
+    },
+    {
+        "month": 2,
+        "traits": {
+            "spending_pattern": "spender",
+            "goal_adherence": "off-track",
+            "saving_consistency": "consistent",
+            "labels": [
+                "high-expense-ratio",
+                "low-savings-rate"
+            ]
+        }
+    },
+    {
+        "month": 3,
+        "traits": {
+            "spending_pattern": "spender",
+            "goal_adherence": "off-track",
+            "saving_consistency": "consistent",
+            "labels": [
+                "high-expense-ratio",
+                "low-savings-rate"
+            ]
+        }
+    },
+    {
+        "month": 3,
+        "traits": {
+            "spending_pattern": "spender",
+            "goal_adherence": "off-track",
+            "saving_consistency": "consistent",
+            "labels": [
+                "high-expense-ratio",
+                "low-savings-rate"
+            ]
+        }
+    },
+    {
+        "month": 3,
+        "traits": {
+            "spending_pattern": "spender",
+            "goal_adherence": "off-track",
+            "saving_consistency": "consistent",
+            "labels": [
+                "high-expense-ratio",
+                "low-savings-rate"
+            ]
+        }
+    },
+    {
+        "month": 4,
+        "traits": {
+            "spending_pattern": "spender",
+            "goal_adherence": "off-track",
+            "saving_consistency": "consistent",
+            "labels": [
+                "high-expense-ratio",
+                "low-savings-rate"
+            ]
+        }
+    }
+]
