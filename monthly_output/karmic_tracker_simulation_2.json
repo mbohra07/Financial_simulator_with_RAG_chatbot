@@ -1,20 +1,20 @@
 [
     {
-        "month": 2,
         "traits": {
             "sattvic_traits": [
+                "balanced_financial_type",
+                "moderate_risk_level",
                 "goal_oriented",
-                "moderate_risk_level"
+                "conservative_spending"
             ],
             "rajasic_traits": [
-                "higher_entertainment_expense",
-                "ambitious_goal"
+                "high_entertainment_expense"
             ],
             "tamasic_traits": [
                 "no_previous_cash_flow_history",
-                "inconsistent_saving"
+                "no_previous_behavior_tracker_history"
             ],
-            "karma_score": 65,
+            "karma_score": 62.0,
             "trend": "Improving"
         }
     }

@@ -17,5 +17,24 @@
         "debt_taken": 0.0,
         "debt_repaid": 0.0,
         "notes": "Since you're saving for a house, try to allocate more towards savings. Reduce entertainment expenses and allocate that amount towards savings. Also, try to increase your income by taking up freelance work."
+    },
+    {
+        "month": 2,
+        "income": {
+            "salary": 75000.0,
+            "freelance": 0.0,
+            "total": 75000.0
+        },
+        "expenses": {
+            "needs": 24000.0,
+            "wants": 4000.0,
+            "luxury": 0.0,
+            "emergency": 0.0,
+            "total": 28000.0
+        },
+        "savings": 47000.0,
+        "debt_taken": 0.0,
+        "debt_repaid": 0.0,
+        "notes": "Reduce entertainment expenses by 15%; Allocate 5% of income towards savings; Diversify investments considering current market volatility. Savings rate is 62.67%. Progress towards goal: 0.0% complete."
     }
 ]

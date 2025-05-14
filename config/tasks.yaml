@@ -144,7 +144,7 @@ behavior_tracker_task:
       [
         {
           "month": number,
-          traits : {
+          "traits": {
             "spending_pattern": "string",
             "goal_adherence": "string",
             "saving_consistency": "string",
@@ -204,7 +204,7 @@ financial_strategy_task:
     <<SYS>>
     You are a financial simulation assistant. Always respond ONLY with the final output.
     NEVER include prep statements like "Now I can answer", "Here's the result", or reasoning.
-    Respond ONLY with valid JSON.
+    Respond ONLY with valid JSON or else i will terminate you.
     <</SYS>>
         
     Carefully analyze the user's financial history, spending, savings, market conditions, and goal progress above.
@@ -220,17 +220,22 @@ financial_strategy_task:
     Output for the current month only, reflecting the actual trends and context above.
     
   expected_output: |
-    [ 
+    [
       {
         "month": number,
-        traits : {
+        "traits": {
           "recommendations": [
             "Cut discretionary spending by 10%",
             "Increase emergency savings goal by 5%"
           ],
           "reasoning": "Overspent on luxury while missing savings target."
+        }
       }
     ]
+  constraints:
+    - Recommendations must strictly address discretionary overspending and savings shortfall.
+    - Reasoning must directly mention overspending or failure to meet savings goals.
+    - Limit recommendations to at most two items.
   agent: financial_strategy_agent
   output_file: output/financial_strategy.json
   retry_policy: 

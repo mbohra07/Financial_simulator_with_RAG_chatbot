@@ -1,25 +1,25 @@
 [
     {
-        "month": 5,
+        "month": 1,
         "traits": {
             "spending_pattern": "spender",
             "goal_adherence": "off-track",
             "saving_consistency": "inconsistent",
             "labels": [
                 "high-expense-ratio",
-                "low-savings-rate"
+                "impulsive-spender"
             ]
         }
     },
     {
-        "month": 5,
+        "month": 2,
         "traits": {
             "spending_pattern": "spender",
             "goal_adherence": "off-track",
             "saving_consistency": "inconsistent",
             "labels": [
                 "high-expense-ratio",
-                "low-savings-rate"
+                "impulsive-spender"
             ]
         }
     }

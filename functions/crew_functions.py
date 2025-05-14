@@ -211,6 +211,12 @@ def run_simulation_with_retries(inputs, custom_agents=None, custom_tasks=None, m
 def simulate_timeline(n_months, simulation_unit, user_inputs, task_id=None):
     global simulation_tasks
     
+    import os
+    import json
+    import asyncio
+    import httpx
+    from datetime import datetime
+    
     previous_result = None
 
     for month in range(1, n_months + 1):
@@ -248,9 +254,9 @@ def simulate_timeline(n_months, simulation_unit, user_inputs, task_id=None):
         ]
         simulation_outputs = {}
         try:
-            # ✅ Load standard simulation result files
+            # ✅ Load monthly simulation result files
             for key in file_keys:
-                filename = f"{user_id}_{key}_simulation.json"
+                filename = f"{key}_simulation_{month}.json"
                 filepath = os.path.join(output_dir, filename)
                 if os.path.exists(filepath):
                     with open(filepath, "r") as f:
@@ -265,15 +271,16 @@ def simulate_timeline(n_months, simulation_unit, user_inputs, task_id=None):
                     simulation_outputs["persona_history"] = json.load(f)
             else:
                 simulation_outputs["persona_history"] = "persona_history.json not found"
-
+            print(simulation_outputs["persona_history"])
             # ✅ Load reflection report
             reflection_filename = f"reflection_month_{month}.json"
-            reflection_path = os.path.join("data", "reports", reflection_filename)
+            reflection_path = os.path.join("monthly_output", reflection_filename)
             if os.path.exists(reflection_path):
                 with open(reflection_path, "r") as f:
                     simulation_outputs["reflection_report"] = json.load(f)
             else:
                 simulation_outputs["reflection_report"] = f"{reflection_filename} not found"
+            print(simulation_outputs["reflection_report"])
 
             # Add metadata
             simulation_outputs["metadata"] = {
@@ -296,22 +303,39 @@ def simulate_timeline(n_months, simulation_unit, user_inputs, task_id=None):
         # ✅ Notify frontend with GET request
         try:
             async def notify_frontend():
-                async with httpx.AsyncClient() as client:
-                    response = await client.get(
-                        "http://192.168.0.109:8000/get-simulation-result",  
-                        params={
-                            "user_name": user_name,
-                            "month": month,
-                            "result": json.dumps(simulation_outputs)
-                        },
-                        timeout=10.0  # Add timeout to prevent hanging
-                    )
-                    return response.status_code
+                try:
+                    async with httpx.AsyncClient() as client:
+                        response = await client.get(
+                            "http://192.168.0.109:8000/get-simulation-result",  
+                            params={
+                                "user_name": user_name,
+                                "month": month,
+                                "result": json.dumps(simulation_outputs)
+                            },
+                            timeout=10.0  # Add timeout to prevent hanging
+                        )
+                        return response.status_code
+                except httpx.RequestError as e:
+                    print(f"❌ Request error when notifying frontend: {e}")
+                    return None
+                except Exception as e:
+                    print(f"❌ Unexpected error when notifying frontend: {e}")
+                    return None
 
-            # Run the async function
-            status_code = asyncio.run(notify_frontend())
-            print(f"✅ Notified frontend for Month {month} (Status: {status_code})")
-            
+            # Run the async function with proper error handling
+            try:
+                status_code = asyncio.run(notify_frontend())
+                if status_code:
+                    print(f"✅ Notified frontend for Month {month} (Status: {status_code})")
+                else:
+                    print(f"⚠️ Could not notify frontend for Month {month}")
+            except RuntimeError as e:
+                # Handle "Event loop is already running" error
+                if "already running" in str(e):
+                    print(f"⚠️ Could not notify frontend (event loop issue): {e}")
+                else:
+                    raise
+                
         except Exception as e:
             print(f"❌ Failed to notify frontend in Month {month}: {e}")
             

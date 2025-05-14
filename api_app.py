@@ -34,7 +34,7 @@ class ExpenseItem(BaseModel):
     amount: float
 
 class SimulationInput(BaseModel):
-    user_id: int
+    user_id: str
     user_name: str
     income: float
     expenses: List[ExpenseItem]
@@ -89,7 +89,7 @@ async def start_simulation(payload: SimulationInput, background_tasks: Backgroun
             run_simulation_background,
             task_id,
             user_inputs,
-            6,  # simulation_steps
+            2,  # simulation_steps
             "Months"  # simulation_unit
         )
         
@@ -120,12 +120,12 @@ async def check_simulation_status(task_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/get-simulation-result/{user_id}")
-async def get_simulation_result(user_id: int):
+async def get_simulation_result(user_id: str):
     """Get all simulation results for a user"""
     try:
         output_dir = "output"
         data_dir = "data"
-        reports_dir = os.path.join(data_dir, "reports")
+        monthly_output_dir = "monthly_output"
         
         # Standard task files
         task_file_names = [
@@ -157,31 +157,53 @@ async def get_simulation_result(user_id: int):
         if os.path.exists(persona_path):
             try:
                 with open(persona_path, "r", encoding="utf-8") as f:
-                    persona_data = json.load(f)
-                    print('lessgoooo')
-                    if isinstance(persona_data, list):
-                        persona_data = [p for p in persona_data if str(p.get("user_id", "")) == str(user_id) or p.get("user_name", "").lower() == str(user_id).lower()]
-                    results_payload["persona_history"] = persona_data
+                    results_payload["persona_history"] = json.load(f)
             except Exception as e:
                 results_payload["persona_history"] = f"Error reading persona history: {str(e)}"
         else:
             results_payload["persona_history"] = f"File not found: {persona_path}"
+        
+        # Load reflection report
+        reflection_path = os.path.join(data_dir, "reflection_month.json")
+        if os.path.exists(reflection_path):
+            try:
+                with open(reflection_path, "r", encoding="utf-8") as f:
+                    results_payload["reflection_month"] = json.load(f)
+            except Exception as e:
+                results_payload["reflection_month"] = f"Error reading reflection month: {str(e)}"
+        else:
+            results_payload["reflection_month"] = f"File not found: {reflection_path}"
                 
-        return {
-            "status": "success", 
-            "user_id": user_id, 
-            "results": results_payload
-        }
+        return JSONResponse(
+            content={
+                "status": "success", 
+                "user_id": user_id, 
+                "results": results_payload
+            }
+        )
     except Exception as e:
         print(f"Error in get_simulation_result: {str(e)}")
         return JSONResponse(
             status_code=500, 
             content={"status": "error", "message": str(e)}
         )
-
+    
+@app.get("/get-simulation-result")
+async def get_simulation_result_by_params(user_name: str = Query(...), month: int = Query(...), result: str = Query(...)):
+    """
+    Handles GET request to receive simulation results.
+    This endpoint is used by the simulate_timeline function to push results.
+    """
+    try:
+        parsed_result = json.loads(result)
+        print(f"\n📬 Received simulation result for {user_name}, Month {month}")
+        return {"status": "success", "user": user_name, "month": month, "data": parsed_result}
+    except Exception as e:
+        return JSONResponse(status_code=400, content={"status": "error", "message": str(e)})
+    
 def main():
     import uvicorn
-    uvicorn.run("api_app:app", host="192.168.3.104", port=8000, reload=False)
+    uvicorn.run("api_app:app", host="192.168.0.109", port=8000, reload=False)
 
 # If you want to run with `python api_app.py`
 if __name__ == "__main__":

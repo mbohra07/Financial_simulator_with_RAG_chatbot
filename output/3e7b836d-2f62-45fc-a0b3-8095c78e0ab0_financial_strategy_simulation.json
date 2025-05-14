@@ -1,5 +1,16 @@
 [
     {
+        "month": 1,
+        "traits": {
+            "recommendations": [
+                "Reduce entertainment expenses by 15%",
+                "Allocate 5% of income towards savings",
+                "Diversify investments considering current market volatility"
+            ],
+            "reasoning": "No previous financial history, moderate risk level, and balanced financial type. Adjusting expenses, savings, and investments to establish a stable financial foundation."
+        }
+    },
+    {
         "month": 2,
         "traits": {
             "recommendations": [

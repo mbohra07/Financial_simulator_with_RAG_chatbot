@@ -63,6 +63,7 @@ def get_month_entries(data, user_name, month):
 def generate_monthly_reflection_report(user_name, month):
     # Paths
     output_dir = "output"
+    monthly_ouput_dir = "monthly_output"
     data_dir = "data/"
     os.makedirs(data_dir, exist_ok=True)
 
@@ -114,7 +115,31 @@ def generate_monthly_reflection_report(user_name, month):
     }
 
     # Save report
-    save_path = os.path.join(data_dir, f"reflection_month_{month}.json")
+
+    save_monthly_path = os.path.join(data_dir, "reflection_month.json")
+
+    # Check if file exists
+    if os.path.exists(save_monthly_path):
+        with open(save_monthly_path, "r", encoding="utf-8") as f:
+            try:
+                existing_data = json.load(f)
+            except json.JSONDecodeError:
+                existing_data = []
+    else:
+        existing_data = []
+
+    # Ensure it's a list to append safely
+    if not isinstance(existing_data, list):
+        existing_data = [existing_data]
+
+    # Append new report
+    existing_data.append(report)
+
+    # Write updated list back to file
+    with open(save_monthly_path, "w", encoding="utf-8") as f:
+        json.dump(existing_data, f, indent=2, ensure_ascii=False)
+
+    save_path = os.path.join(monthly_ouput_dir, f"reflection_month_{month}.json")
     with open(save_path, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, ensure_ascii=False)
     print(f"✅ Reflection report saved: {save_path}")
@@ -140,8 +165,8 @@ def assign_persona(user_name, month):
     change_flag = persona_title != last_persona
 
     record = {
-        "user_name": user_name,
         "month": month,
+        "user_name": user_name,
         "persona_title": persona_title,
         "avg_karmic_score": avg_karmic_score,
         "behavior_pattern": behavior_pattern,
