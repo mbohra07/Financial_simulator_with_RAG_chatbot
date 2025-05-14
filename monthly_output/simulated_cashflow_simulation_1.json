@@ -1,0 +1,21 @@
+[
+    {
+        "month": 1,
+        "income": {
+            "salary": 75000.0,
+            "freelance": 0.0,
+            "total": 75000.0
+        },
+        "expenses": {
+            "needs": 24000.0,
+            "wants": 4000.0,
+            "luxury": 0.0,
+            "emergency": 0.0,
+            "total": 28000.0
+        },
+        "savings": 22000.0,
+        "debt_taken": 0.0,
+        "debt_repaid": 0.0,
+        "notes": "This month, the user has a balanced financial type and moderate risk level. They should focus on saving for their goal of buying a house. They should consider reducing unnecessary expenses and allocate more funds towards savings."
+    }
+]

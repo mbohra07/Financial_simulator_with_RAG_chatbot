@@ -1,269 +1,211 @@
 [
     {
         "month": 1,
-        "context": "No previous cash flow history available for this user.\n\nNo previous financial strategy history available for this user.",
         "income": {
-            "salary": 8000.0,
+            "salary": 75000.0,
             "freelance": 0.0,
-            "total": 8000.0
+            "total": 75000.0
         },
         "expenses": {
-            "needs": 4000.0,
-            "wants": 3000.0,
+            "needs": 24000.0,
+            "wants": 4000.0,
             "luxury": 0.0,
             "emergency": 0.0,
-            "total": 7000.0
+            "total": 28000.0
         },
-        "savings": 1000.0,
+        "savings": 22000.0,
         "debt_taken": 0.0,
         "debt_repaid": 0.0,
-        "notes": "This month, the user has managed to save 1000.0 from their income which can be invested in a high-yield savings account. Considering the user has a moderate risk appetite and conservative financial type, it is recommended to split the savings between high-yield savings account and low-risk investment instruments."
+        "notes": "This month, the user has a balanced financial type and moderate risk level. They should focus on saving for their goal of buying a house. They should consider reducing unnecessary expenses and allocate more funds towards savings."
     },
     {
         "month": 2,
         "income": {
-            "salary": 8000.0,
+            "salary": 75000.0,
             "freelance": 0.0,
-            "total": 8000.0
+            "total": 75000.0
         },
         "expenses": {
-            "needs": 4000.0,
-            "wants": 2550.0,
+            "needs": 24000.0,
+            "wants": 4000.0,
             "luxury": 0.0,
             "emergency": 0.0,
-            "total": 6550.0
+            "total": 28000.0
         },
-        "savings": 1450.0,
+        "savings": 22000.0,
         "debt_taken": 0.0,
         "debt_repaid": 0.0,
-        "notes": "Continue to cut back on discretionary spending, especially on 'Drinks', and prioritize building an emergency fund to ensure you're on track to meet your savings goal of ₹30,000 in 6 months."
+        "notes": "Continue working towards your goal of saving for a house and maintain a consistent savings rate."
     },
     {
         "month": 3,
         "income": {
-            "salary": 8000.0,
+            "salary": 75000.0,
             "freelance": 0.0,
-            "total": 8000.0
+            "total": 75000.0
         },
         "expenses": {
-            "needs": 4000.0,
-            "wants": 3000.0,
+            "needs": 24000.0,
+            "wants": 4000.0,
             "luxury": 0.0,
             "emergency": 0.0,
-            "total": 7000.0
+            "total": 31000.0
         },
-        "savings": 1000.0,
+        "savings": 19000.0,
         "debt_taken": 0.0,
         "debt_repaid": 0.0,
-        "notes": "Conservative financial approach with a medium risk level. Reducing discretionary spending by 10% and investing 5% of income in commodities will help achieve the savings goal. Transfer 12% of income to emergency fund to avoid debt."
-    },
-    {
-        "month": 3,
-        "income": {
-            "salary": 8000.0,
-            "freelance": 0.0,
-            "total": 8000.0
-        },
-        "expenses": {
-            "needs": 4000.0,
-            "wants": 3000.0,
-            "luxury": 0.0,
-            "emergency": 0.0,
-            "total": 7000.0
-        },
-        "savings": 1000.0,
-        "debt_taken": 0.0,
-        "debt_repaid": 0.0,
-        "notes": "Reducing discretionary spending and investing in commodities would be beneficial for reaching the goal of saving 30,000 in 6 months."
-    },
-    {
-        "month": 3,
-        "income": {
-            "salary": 8000.0,
-            "freelance": 0.0,
-            "total": 8000.0
-        },
-        "expenses": {
-            "needs": 4000.0,
-            "wants": 3000.0,
-            "luxury": 0.0,
-            "emergency": 0.0,
-            "total": 7000.0
-        },
-        "savings": 1000.0,
-        "debt_taken": 0.0,
-        "debt_repaid": 0.0,
-        "notes": "Continue to prioritize savings for the short-term goal. Consider reducing discretionary spending to reach the target rate of 15.3%."
+        "notes": "Continue to maintain consistent savings, adjust expenses to align with cost of living index, and increase income allocation towards 'save_for_house' goal. Monitor market conditions and adjust investment returns accordingly."
     },
     {
         "month": 4,
         "income": {
-            "salary": 8000.0,
+            "salary": 75000.0,
             "freelance": 0.0,
-            "total": 8000.0
+            "total": 75000.0
         },
         "expenses": {
-            "needs": 4000.0,
-            "wants": 3000.0,
+            "needs": 18000.0,
+            "wants": 10000.0,
             "luxury": 0.0,
             "emergency": 0.0,
-            "total": 7000.0
+            "total": 28000.0
         },
-        "savings": 1000.0,
+        "savings": 21000.0,
         "debt_taken": 0.0,
         "debt_repaid": 0.0,
-        "notes": "Conservative financial type and medium risk level suggest caution in investments. Cutting 'Drinks' expense by 12% and reducing discretionary spending by 10% can help achieve financial goal."
+        "notes": "Continue to save consistently and try to reduce expenses on transport."
     },
     {
         "month": 4,
         "income": {
-            "salary": 8000.0,
+            "salary": 75000.0,
             "freelance": 0.0,
-            "total": 8000.0
+            "total": 75000.0
         },
         "expenses": {
-            "needs": 4000.0,
-            "wants": 3000.0,
+            "needs": 27000.0,
+            "wants": 4000.0,
             "luxury": 0.0,
             "emergency": 0.0,
-            "total": 7000.0
+            "total": 31000.0
         },
-        "savings": 900.0,
+        "savings": 20000.0,
         "debt_taken": 0.0,
         "debt_repaid": 0.0,
-        "notes": "Conservative approach suggested for this month. Review and adjust expenses, considering goal progress and market sentiments."
+        "notes": "Cut discretionary spending by 10% and reduce expenses on transport by 5% to align with cost of living index. Increase emergency savings goal by 5% and review rent amount to align with cost of living index. Create a budget for entertainment and track expenses. Increase income allocation towards goal 'save_for_house' by 5%."
     },
     {
         "month": 4,
         "income": {
-            "salary": 8000.0,
+            "salary": 75000.0,
+            "freelance": 0.0,
+            "total": 75000.0
+        },
+        "expenses": {
+            "needs": 27000.0,
+            "wants": 4000.0,
+            "luxury": 0.0,
+            "emergency": 0.0,
+            "total": 31000.0
+        },
+        "savings": 19000.0,
+        "debt_taken": 0.0,
+        "debt_repaid": 0.0,
+        "notes": "Continue to work on reducing discretionary spending and expenses on transport to align with cost of living index. Increase income allocation towards goal 'save_for_house' to accelerate progress."
+    },
+    {
+        "month": 5,
+        "income": {
+            "salary": 75000.0,
+            "freelance": 0.0,
+            "total": 75000.0
+        },
+        "expenses": {
+            "needs": 24000.0,
+            "wants": 7000.0,
+            "luxury": 0.0,
+            "emergency": 0.0,
+            "total": 31000.0
+        },
+        "savings": 22000.0,
+        "debt_taken": 0.0,
+        "debt_repaid": 0.0,
+        "notes": "Congratulations on maintaining consistent savings each month! Considering your moderate risk level and balanced financial type, it's essential to continue increasing your income allocation towards your goal 'save_for_house'. Please review and adjust your rent amount to align with the cost of living index and cut discretionary spending by 10% to achieve your goal faster."
+    },
+    {
+        "month": 5,
+        "income": {
+            "salary": 75000.0,
+            "freelance": 0.0,
+            "total": 75000.0
+        },
+        "expenses": {
+            "needs": 24000.0,
+            "wants": 4000.0,
+            "luxury": 0.0,
+            "emergency": 0.0,
+            "total": 31000.0
+        },
+        "savings": 19000.0,
+        "debt_taken": 0.0,
+        "debt_repaid": 0.0,
+        "notes": "Continue to monitor expenses on transport and entertainment, consider creating a budget for discretionary spending to avoid overspending. Average savings rate is 27.3%, which is good, but it's essential to maintain consistency to achieve the goal of saving for a house."
+    },
+    {
+        "month": 6,
+        "income": {
+            "salary": 75000.0,
             "freelance": 0,
-            "total": 8000.0
+            "total": 75000.0
         },
         "expenses": {
-            "needs": 4000.0,
-            "wants": 3000.0,
+            "needs": 24000.0,
+            "wants": 4000.0,
             "luxury": 0,
             "emergency": 0,
-            "total": 7000.0
+            "total": 31000.0
         },
-        "savings": 1000.0,
+        "savings": 22000.0,
         "debt_taken": 0,
         "debt_repaid": 0,
-        "notes": "You are doing well in terms of savings. However, you need to reduce your expenses on drinks and prioritize your financial goals. Also, consider investing in commodities as market conditions are favorable."
-    },
-    {
-        "month": 5,
-        "income": {
-            "salary": 8000.0,
-            "freelance": 0.0,
-            "total": 8000.0
-        },
-        "expenses": {
-            "needs": 4000.0,
-            "wants": 3000.0,
-            "luxury": 0.0,
-            "emergency": 0.0,
-            "total": 7000.0
-        },
-        "savings": 1000.0,
-        "debt_taken": 0.0,
-        "debt_repaid": 0.0,
-        "notes": "Consistent savings each month, but considering investment in commodities to achieve the goal of saving 30,000 in 6 months."
-    },
-    {
-        "month": 5,
-        "income": {
-            "salary": 8000.0,
-            "freelance": 0.0,
-            "total": 8000.0
-        },
-        "expenses": {
-            "needs": 4000.0,
-            "wants": 3000.0,
-            "luxury": 0.0,
-            "emergency": 0.0,
-            "total": 7000.0
-        },
-        "savings": 1000.0,
-        "debt_taken": 0.0,
-        "debt_repaid": 0.0,
-        "notes": "Conservative financial approach due to medium risk level and bearish crypto market. Focus on building emergency fund and reducing discretionary spending."
-    },
-    {
-        "month": 5,
-        "income": {
-            "salary": 8000.0,
-            "freelance": 0.0,
-            "total": 8000.0
-        },
-        "expenses": {
-            "needs": 4000.0,
-            "wants": 3000.0,
-            "luxury": 0.0,
-            "emergency": 0.0
-        },
-        "total": 7000.0,
-        "savings": 1000.0,
-        "debt_taken": 0.0,
-        "debt_repaid": 0.0,
-        "notes": "Continuing to track progress towards the goal of saving ₹30,000 in 6 months. Recommendations based on market conditions and historical spending habits will help stay on track."
+        "notes": "Consistent savings each month. Reduce expenses on transport by 5%. Review and adjust rent amount to align with cost of living index. Increase income allocation towards goal 'save_for_house' by 5%."
     },
     {
         "month": 6,
         "income": {
-            "salary": 8000.0,
-            "freelance": 0.0,
-            "total": 8000.0
+            "salary": 75000.0,
+            "freelance": 0,
+            "total": 75000.0
         },
         "expenses": {
-            "needs": 4000.0,
-            "wants": 3000.0,
+            "needs": 36000.0,
+            "wants": 4000.0,
             "luxury": 0.0,
             "emergency": 0.0,
-            "total": 7000.0
+            "total": 31000.0
         },
-        "savings": 1000.0,
+        "savings": 22000.0,
         "debt_taken": 0.0,
         "debt_repaid": 0.0,
-        "notes": "Continue cutting back on discretionary spending to meet your savings goal. Consider investing in commodities to diversify your portfolio."
+        "notes": "Congratulations on consistently saving for your goal! Continue to review and adjust your expenses to align with the cost of living index. Increase your income allocation towards your goal by 5%. Cut discretionary spending by 5%."
     },
     {
         "month": 6,
         "income": {
-            "salary": 8000.0,
+            "salary": 75000.0,
             "freelance": 0.0,
-            "total": 8000.0
+            "total": 75000.0
         },
         "expenses": {
-            "needs": 4000.0,
-            "wants": 3000.0,
+            "needs": 21000.0,
+            "wants": 10000.0,
             "luxury": 0.0,
             "emergency": 0.0,
-            "total": 7000.0
+            "total": 31000.0
         },
-        "savings": 900.0,
+        "savings": 22000.0,
         "debt_taken": 0.0,
         "debt_repaid": 0.0,
-        "notes": "Consistent savings each month. No debt taken so far. Reduce discretionary spending to stay on track for your goal."
-    },
-    {
-        "month": 6,
-        "income": {
-            "salary": 8000.0,
-            "freelance": 0.0,
-            "total": 8000.0
-        },
-        "expenses": {
-            "needs": 4000.0,
-            "wants": 3000.0,
-            "luxury": 0.0,
-            "emergency": 0.0,
-            "total": 7000.0
-        },
-        "savings": 1000.0,
-        "debt_taken": 0.0,
-        "debt_repaid": 0.0,
-        "notes": "Try to reduce expenses to achieve savings goal. Market conditions suggest caution."
+        "notes": "Reduce expenses on transport by 5% and review rent amount to align with cost of living index. Increase income allocation towards goal 'save_for_house' by 5%. Continue to track expenses and savings rate."
     }
 ]

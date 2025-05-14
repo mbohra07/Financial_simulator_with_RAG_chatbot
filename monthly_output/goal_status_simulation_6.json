@@ -1,0 +1,21 @@
+[
+    {
+        "month": 6,
+        "goals": [
+            {
+                "name": "save_for_house",
+                "target_amount": null,
+                "saved_so_far": 164000.0,
+                "status": "behind",
+                "priority": 1,
+                "adjustment_suggestion": "Consider increasing monthly savings by ₹15,000 to get back on track."
+            }
+        ],
+        "summary": {
+            "on_track_goals": 0,
+            "behind_goals": 1,
+            "total_saved": 164000.0,
+            "total_required_by_now": 792000.0
+        }
+    }
+]

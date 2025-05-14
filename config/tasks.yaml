@@ -14,14 +14,13 @@ simulate_cashflow_task:
       - Financial Goal: {goal}
       - Financial Type: {financial_type}
       - Risk Level: {risk_level}
-      - Current Balance: {balance}
 
     Simulate the user’s income and expenses for the month based on this profile, their goals, financial type, risk level, and current balance. 
     Use the provided breakdown of expenses and income to populate the output fields. 
     If any income or expense category is missing, treat it as zero. Tailor notes and savings based on the user’s goal, risk level, and financial type.
 
     {context}
-    
+
   expected_output: |
     [
       {

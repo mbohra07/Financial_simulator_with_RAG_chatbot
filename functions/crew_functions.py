@@ -1,5 +1,5 @@
 from functions.economic_context import EconomicEnvironment, simulate_monthly_market
-from functions.monthly_simulation import simulate_month
+from functions.monthly_simulation import deduplicate_and_save, assign_persona, generate_monthly_reflection_report
 import os
 import json
 from litellm import RateLimitError, completion
@@ -9,7 +9,10 @@ from crewai import Crew
 import traceback
 import streamlit as st
 import requests
+import httpx
+import asyncio
 from functions.task_functions import *
+from datetime import datetime
 
 # *******************************************Functions to sequentially and hierarchically run my crew workflow************************
 
@@ -52,7 +55,6 @@ def kickoff_sequential(self, inputs, sleep_between_calls=15, max_retries=20):
         if task.name == "simulate_cashflow_task":
             # Only need previous simulate_cashflow and financial_strategy
             task_context.append(build_simulated_cashflow_context(month_number, user_id))
-            print("DEBUG: task_context =", task_context)
             task_context.append(build_financial_strategy_context(month_number, user_id))
         elif task.name == "discipline_tracker_task":
             # Needs context for previous simulate_cashflow and discipline_tracker
@@ -118,12 +120,16 @@ def kickoff_sequential(self, inputs, sleep_between_calls=15, max_retries=20):
         # 💾 Write output (append mode for every task)
         if hasattr(task, 'output_file') and task.output_file:
             output_dir = os.path.dirname(task.output_file)
+            monthly_output_dir = "monthly_output"
             base_file_name = os.path.basename(task.output_file)
             file_name_without_ext, ext = os.path.splitext(base_file_name)
+            monthly_file_name = f"{file_name_without_ext}_simulation_{month_number}{ext}"
             dynamic_file_name = f"{user_id}_{file_name_without_ext}_simulation{ext}"
+            monthly_output_path = os.path.join(monthly_output_dir, monthly_file_name)
             output_path = os.path.join(output_dir, dynamic_file_name)
 
             os.makedirs(output_dir, exist_ok=True)
+            os.makedirs(monthly_output_dir, exist_ok=True)
 
             try:
                 # Load existing data if exists
@@ -144,7 +150,28 @@ def kickoff_sequential(self, inputs, sleep_between_calls=15, max_retries=20):
 
                 print(f"💾 Appended result to {output_path}")
             except Exception as e:
-                print(f"❗ Error appending to file '{output_path}': {e}")
+                print(f"❗ Error appending to ouput file '{output_path}': {e}")
+
+            try:
+                # Load existing data if exists
+                if os.path.exists(monthly_output_path):
+                    with open(monthly_output_path, "r", encoding="utf-8") as f:
+                        existing_monthly_data = json.load(f)
+                else:
+                    existing_monthly_data = []
+
+                # If parsed_result is a list, extend, else append
+                if isinstance(parsed_result, list):
+                    existing_monthly_data.extend(parsed_result)
+                else:
+                    existing_monthly_data.append(parsed_result)
+
+                with open(monthly_output_path, "w", encoding="utf-8") as f:
+                    json.dump(existing_monthly_data, f, indent=4, ensure_ascii=False)
+
+                print(f"💾 Appended result to {monthly_output_path}")
+            except Exception as e:
+                print(f"❗ Error appending to monthly file '{monthly_output_path}': {e}")
 
         time.sleep(sleep_between_calls)
 
@@ -179,126 +206,11 @@ def run_simulation_with_retries(inputs, custom_agents=None, custom_tasks=None, m
             break
     return None
 
-def load_json(filepath):
-    if not os.path.exists(filepath):
-        return []
-    with open(filepath, 'r', encoding='utf-8') as f:
-        return json.load(f)
 
-def save_json(filepath, data):
-    os.makedirs(os.path.dirname(filepath), exist_ok=True)
-    with open(filepath, 'w', encoding='utf-8') as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
 
-def compute_persona_title(karma_score, behavior_pattern):
-    if karma_score > 75 and behavior_pattern == "Consistent Saver":
-        return "Wise Sage"
-    elif 50 <= karma_score <= 75 and behavior_pattern in ["Consistent Saver", "Occasional Spender"]:
-        return "Disciplined Hustler"
-    elif karma_score < 50 or behavior_pattern == "Inconsistent Behavior":
-        return "Reckless Drifter"
-    else:
-        return "Balanced Explorer"
-
-def get_month_entries(data, user_name, month):
-    # Filter entries for user and month
-    return [entry for entry in data if entry.get("user_name") == user_name and entry.get("month") == month]
-
-def generate_monthly_reflection_report(user_name, month):
-    # Paths
-    output_dir = "output"
-    data_dir = "data/"
-    os.makedirs(data_dir, exist_ok=True)
-
-    # Load logs
-    karma_log = load_json(os.path.join(output_dir, "karmic_tracker_simulation.json")) or []
-    behavior_log = load_json(os.path.join(output_dir, "behavior_tracker_simulation.json")) or []
-    persona_log = load_json(os.path.join("data", "persona_history.json")) or []
-
-    # Filter for current user and month
-    karma_entries = get_month_entries(karma_log, user_name, month)
-    behavior_entries = get_month_entries(behavior_log, user_name, month)
-    persona_entries = get_month_entries(persona_log, user_name, month)
-
-    # Monthly karma score (average)
-    if karma_entries:
-        karma_scores = [entry.get("traits", {}).get("karma_score", 0) for entry in karma_entries]
-        monthly_karma_score = round(sum(karma_scores) / len(karma_scores), 2)
-    else:
-        monthly_karma_score = None
-
-    # Persona title + transition
-    persona_title = persona_entries[-1]["persona_title"] if persona_entries else "Unassigned"
-    transition_note = persona_entries[-1].get("transition_reason", "No transition noted") if persona_entries else "No transition noted"
-
-    # Key behavior observations
-    if behavior_entries:
-        behavior_traits = behavior_entries[-1].get("traits", {})
-        behavior_obs = {
-            "spending_pattern": behavior_traits.get("spending_pattern", ""),
-            "goal_adherence": behavior_traits.get("goal_adherence", ""),
-            "saving_consistency": behavior_traits.get("saving_consistency", ""),
-            "labels": behavior_traits.get("labels", [])
-        }
-    else:
-        behavior_obs = {}
-
-    # Summary message
-    summary_message = f"You’ve evolved into a {persona_title} due to {transition_note}."
-
-    # Assemble report
-    report = {
-        "month": month,
-        "user_name": user_name,
-        "monthly_karma_score": monthly_karma_score,
-        "persona_title": persona_title,
-        "transition_note": transition_note,
-        "key_behavior_observations": behavior_obs,
-        "summary_message": summary_message
-    }
-
-    # Save report
-    save_path = os.path.join(data_dir, f"reflection_month_{month}.json")
-    with open(save_path, "w", encoding="utf-8") as f:
-        json.dump(report, f, indent=2, ensure_ascii=False)
-    print(f"✅ Reflection report saved: {save_path}")
-    return report
-
-def assign_persona(user_name, month):
-    karma_data = load_json('output/karmic_tracker_simulation.json')
-    behavior_data = load_json('output/behavior_tracker_simulatiom.json')
-    history_data = load_json('data/persona_history.json')
-
-    # Extract average karma score for the month
-    karmic_scores = [entry.get('traits', {}).get('karma_score', 0) for entry in karma_data if entry.get('user_name') == user_name and entry.get('month') == month]
-    avg_karmic_score = sum(karmic_scores) / len(karmic_scores) if karmic_scores else 50
-
-    # Extract behavior pattern
-    behavior_entry = next((entry for entry in behavior_data if entry.get('user_name') == user_name and entry.get('month') == month), None)
-    behavior_pattern = behavior_entry.get('traits', {}).get('spending_pattern', "Inconsistent Behavior") if behavior_entry else "Inconsistent Behavior"
-
-    persona_title = compute_persona_title(avg_karmic_score, behavior_pattern)
-
-    # Check if persona changed
-    last_persona = history_data[-1]['persona_title'] if history_data else None
-    change_flag = persona_title != last_persona
-
-    record = {
-        "user_name": user_name,
-        "month": month,
-        "persona_title": persona_title,
-        "avg_karmic_score": avg_karmic_score,
-        "behavior_pattern": behavior_pattern,
-        "change_flag": change_flag
-    }
-
-    history_data.append(record)
-    save_json('data/persona_history.json', history_data)
-
-    print(f"🔮 Persona Assigned for Month {month}: {persona_title} (Change: {change_flag})")
-    return record
-
-def simulate_timeline(n_months, simulation_unit, user_inputs):
+def simulate_timeline(n_months, simulation_unit, user_inputs, task_id=None):
+    global simulation_tasks
+    
     previous_result = None
 
     for month in range(1, n_months + 1):
@@ -308,6 +220,7 @@ def simulate_timeline(n_months, simulation_unit, user_inputs):
         market_snapshot, market_context_summary = simulate_monthly_market()
         user_inputs["market_context"] = market_context_summary 
         user_name = user_inputs['user_name']
+        user_id = user_inputs['user_id']
         user_inputs['inflation'] = context['inflation_rate']
         user_inputs['interest_rate'] = context['interest_rate']
         user_inputs['cost_of_living_index'] = context['cost_of_living_index']
@@ -317,5 +230,90 @@ def simulate_timeline(n_months, simulation_unit, user_inputs):
         result = run_simulation_with_retries(inputs=user_inputs)
         assign_persona(user_name, month)
         generate_monthly_reflection_report(user_name, month)
-    print("\n🎉 All tasks completed sequentially!")
+        
+        # Update task status to partially_completed if task_id is available
+        if task_id and 'simulation_tasks' in globals() and task_id in simulation_tasks:
+            simulation_tasks[task_id]["status"] = "partially_completed" if month < n_months else "completed"
+            simulation_tasks[task_id]["completed_months"] = month
+            simulation_tasks[task_id]["total_months"] = n_months
+            simulation_tasks[task_id]["progress_percentage"] = (month / n_months) * 100
+            print(f"📊 Updated task status: {simulation_tasks[task_id]['status']} ({month}/{n_months} months)")
+        
+        output_dir = 'output'
+
+        # ✅ Collect simulation result files
+        file_keys = [
+            "behavior_tracker", "discipline_report", "financial_strategy",
+            "goal_status", "karmic_tracker", "simulated_cashflow"
+        ]
+        simulation_outputs = {}
+        try:
+            # ✅ Load standard simulation result files
+            for key in file_keys:
+                filename = f"{user_id}_{key}_simulation.json"
+                filepath = os.path.join(output_dir, filename)
+                if os.path.exists(filepath):
+                    with open(filepath, "r") as f:
+                        simulation_outputs[key] = json.load(f)
+                else:
+                    simulation_outputs[key] = f"{filename} not found"
+ 
+            # ✅ Load persona history
+            persona_path = os.path.join("data", "persona_history.json")
+            if os.path.exists(persona_path):
+                with open(persona_path, "r") as f:
+                    simulation_outputs["persona_history"] = json.load(f)
+            else:
+                simulation_outputs["persona_history"] = "persona_history.json not found"
+
+            # ✅ Load reflection report
+            reflection_filename = f"reflection_month_{month}.json"
+            reflection_path = os.path.join("data", "reports", reflection_filename)
+            if os.path.exists(reflection_path):
+                with open(reflection_path, "r") as f:
+                    simulation_outputs["reflection_report"] = json.load(f)
+            else:
+                simulation_outputs["reflection_report"] = f"{reflection_filename} not found"
+
+            # Add metadata
+            simulation_outputs["metadata"] = {
+                "user_id": user_id,
+                "user_name": user_name,
+                "month": month,
+                "simulation_unit": simulation_unit,
+                "timestamp": datetime.now().isoformat()
+            }
+
+        except Exception as read_err:
+            print(f"❌ Error reading output files: {read_err}")
+            simulation_outputs = {
+                "error": str(read_err),
+                "user_id": user_id,
+                "user_name": user_name,
+                "month": month
+            }
+
+        # ✅ Notify frontend with GET request
+        try:
+            async def notify_frontend():
+                async with httpx.AsyncClient() as client:
+                    response = await client.get(
+                        "http://192.168.0.109:8000/get-simulation-result",  
+                        params={
+                            "user_name": user_name,
+                            "month": month,
+                            "result": json.dumps(simulation_outputs)
+                        },
+                        timeout=10.0  # Add timeout to prevent hanging
+                    )
+                    return response.status_code
+
+            # Run the async function
+            status_code = asyncio.run(notify_frontend())
+            print(f"✅ Notified frontend for Month {month} (Status: {status_code})")
+            
+        except Exception as e:
+            print(f"❌ Failed to notify frontend in Month {month}: {e}")
+            
+    print("\n🎉 All months simulated successfully!")
     return True

@@ -1,0 +1,28 @@
+[
+    {
+        "month": 5,
+        "rules_checked": {
+            "expenses_within_income": true,
+            "minimum_savings_met": true,
+            "unnecessary_debt_taken": true
+        },
+        "violations": [],
+        "discipline_score": 10,
+        "recommendations": [
+            "Congratulations on maintaining discipline! Continue to monitor expenses and stay committed to your savings goals."
+        ]
+    },
+    {
+        "month": 5,
+        "rules_checked": {
+            "expenses_within_income": true,
+            "minimum_savings_met": true,
+            "unnecessary_debt_taken": true
+        },
+        "violations": [],
+        "discipline_score": 10,
+        "recommendations": [
+            "Congratulations on maintaining discipline! Continue to monitor expenses and stay committed to your savings goals."
+        ]
+    }
+]

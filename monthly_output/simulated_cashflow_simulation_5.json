@@ -1,0 +1,40 @@
+[
+    {
+        "month": 5,
+        "income": {
+            "salary": 75000.0,
+            "freelance": 0.0,
+            "total": 75000.0
+        },
+        "expenses": {
+            "needs": 24000.0,
+            "wants": 7000.0,
+            "luxury": 0.0,
+            "emergency": 0.0,
+            "total": 31000.0
+        },
+        "savings": 22000.0,
+        "debt_taken": 0.0,
+        "debt_repaid": 0.0,
+        "notes": "Congratulations on maintaining consistent savings each month! Considering your moderate risk level and balanced financial type, it's essential to continue increasing your income allocation towards your goal 'save_for_house'. Please review and adjust your rent amount to align with the cost of living index and cut discretionary spending by 10% to achieve your goal faster."
+    },
+    {
+        "month": 5,
+        "income": {
+            "salary": 75000.0,
+            "freelance": 0.0,
+            "total": 75000.0
+        },
+        "expenses": {
+            "needs": 24000.0,
+            "wants": 4000.0,
+            "luxury": 0.0,
+            "emergency": 0.0,
+            "total": 31000.0
+        },
+        "savings": 19000.0,
+        "debt_taken": 0.0,
+        "debt_repaid": 0.0,
+        "notes": "Continue to monitor expenses on transport and entertainment, consider creating a budget for discretionary spending to avoid overspending. Average savings rate is 27.3%, which is good, but it's essential to maintain consistency to achieve the goal of saving for a house."
+    }
+]

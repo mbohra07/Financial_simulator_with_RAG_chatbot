@@ -3,93 +3,96 @@
         "month": 1,
         "traits": {
             "sattvic_traits": [
-                "Conservative financial type",
-                "Specific goal adherence",
-                "Medium risk level"
+                "-goal_oriented",
+                "moderate_risk_level"
             ],
             "rajasic_traits": [
-                "High expenses on wants/luxuries (Drinks)",
-                "Ambitious goal of saving 30,000 in 6 months"
+                "higher_entertainment_expense"
             ],
             "tamasic_traits": [
-                ""
-            ]
-        },
-        "karma_score": 60,
-        "trend": "Neutral"
-    },
-    {
-        "month": 2,
-        "traits": {
-            "sattvic_traits": [
-                "Conservative financial type",
-                "Specific goal adherence",
-                "Medium risk level"
-            ],
-            "rajasic_traits": [
-                "High expenses on wants/luxuries (Drinks)",
-                "Ambitious goal of saving 30,000 in 6 months"
-            ],
-            "tamasic_traits": []
-        },
-        "karma_score": 60,
-        "trend": "Improving"
-    },
-    {
-        "month": 3,
-        "traits": {
-            "sattvic_traits": [
-                "Conservative financial type",
-                "Specific goal adherence",
-                "Medium risk level",
-                "Consistent savings",
-                "No debt taken"
-            ],
-            "rajasic_traits": [
-                "High expenses on wants/luxuries (Drinks)",
-                "Ambitious goal of saving 30,000 in 6 months"
-            ],
-            "tamasic_traits": [
-                "High expense ratio",
-                "Low savings rate",
-                "Goal adherence: off-track"
+                "no_previous_cash_flow_history"
             ],
             "karma_score": 60,
             "trend": "Neutral"
         }
     },
     {
-        "month": 3,
+        "month": 2,
         "traits": {
             "sattvic_traits": [
-                "Conservative financial type",
-                "Specific goal adherence",
-                "Medium risk level"
+                "goal_oriented",
+                "moderate_risk_level"
             ],
             "rajasic_traits": [
-                "High expenses on wants/luxuries (Drinks)",
-                "Ambitious goal of saving 30,000 in 6 months"
+                "higher_entertainment_expense",
+                "ambitious_goal"
             ],
-            "tamasic_traits": []
-        },
-        "karma_score": 60,
-        "trend": "Improving"
+            "tamasic_traits": [
+                "no_previous_cash_flow_history",
+                "inconsistent_saving"
+            ],
+            "karma_score": 65,
+            "trend": "Improving"
+        }
     },
     {
         "month": 3,
         "traits": {
             "sattvic_traits": [
-                "Conservative financial type",
-                "Specific goal adherence",
-                "Medium risk level"
+                "goal_oriented",
+                "moderate_risk_level",
+                "consistent_savings"
             ],
             "rajasic_traits": [
-                "High expenses on wants/luxuries (Drinks)",
-                "Ambitious goal of saving 30,000 in 6 months"
+                "higher_entertainment_expense",
+                "ambitious_goal"
             ],
-            "tamasic_traits": []
-        },
-        "karma_score": 60,
-        "trend": "Improving"
+            "tamasic_traits": [
+                "inconsistent_saving",
+                "no_previous_cash_flow_history"
+            ],
+            "karma_score": 68,
+            "trend": "Improving"
+        }
+    },
+    {
+        "month": 5,
+        "traits": {
+            "sattvic_traits": [
+                "goal_oriented",
+                "moderate_risk_level",
+                "consistent_savings"
+            ],
+            "rajasic_traits": [
+                "higher_entertainment_expense",
+                "ambitious_goal"
+            ],
+            "tamasic_traits": [
+                "inconsistent_saving",
+                "no_previous_cash_flow_history"
+            ],
+            "karma_score": 70,
+            "trend": "Improving"
+        }
+    },
+    {
+        "month": 5,
+        "traits": {
+            "sattvic_traits": [
+                "goal_oriented",
+                "moderate_risk_level",
+                "consistent_savings"
+            ],
+            "rajasic_traits": [
+                "higher_entertainment_expense",
+                "ambitious_goal"
+            ],
+            "tamasic_traits": [
+                "inconsistent_saving",
+                "no_previous_cash_flow_history"
+            ],
+            "karma_score": 70,
+            "trend": "Improving"
+        }
     }
 ]

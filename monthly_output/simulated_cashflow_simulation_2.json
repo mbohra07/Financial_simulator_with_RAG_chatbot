@@ -1,0 +1,21 @@
+[
+    {
+        "month": 2,
+        "income": {
+            "salary": 75000.0,
+            "freelance": 0.0,
+            "total": 75000.0
+        },
+        "expenses": {
+            "needs": 24000.0,
+            "wants": 4000.0,
+            "luxury": 0.0,
+            "emergency": 0.0,
+            "total": 28000.0
+        },
+        "savings": 22000.0,
+        "debt_taken": 0.0,
+        "debt_repaid": 0.0,
+        "notes": "Continue working towards your goal of saving for a house and maintain a consistent savings rate."
+    }
+]

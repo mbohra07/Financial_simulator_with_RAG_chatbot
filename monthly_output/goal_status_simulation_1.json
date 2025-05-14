@@ -1,0 +1,22 @@
+[
+    {
+        "month": 1,
+        "goals": [
+            {
+                "name": "save_for_house",
+                "target_amount": 44000.0,
+                "saved_so_far": 44000.0,
+                "expected_by_now": 44000.0,
+                "status": "on_track",
+                "priority": 1,
+                "adjustment_suggestion": "Continue with the current savings plan to stay on track for the goal."
+            }
+        ],
+        "summary": {
+            "on_track_goals": 1,
+            "behind_goals": 0,
+            "total_saved": 44000.0,
+            "total_required_by_now": 44000.0
+        }
+    }
+]
