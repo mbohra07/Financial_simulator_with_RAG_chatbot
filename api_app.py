@@ -6,11 +6,17 @@ from typing import List, Dict, Any
 import json
 import os
 import uuid
+from dotenv import load_dotenv
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+import agentops
 from functions.crew_functions import simulate_timeline
 
 # ************************************************FastAPI configuration************************************************************
+agentops.init(
+     api_key='4be58a32-e415-4142-82b7-834ae6b95422',
+     default_tags=['crewai']
+)
 app = FastAPI()
 
 # Add CORS middleware to handle OPTIONS requests
@@ -188,22 +194,19 @@ async def get_simulation_result(user_id: str):
             content={"status": "error", "message": str(e)}
         )
     
-@app.get("/get-simulation-result")
+"""@app.get("/get-simulation-result")
 async def get_simulation_result_by_params(user_name: str = Query(...), month: int = Query(...), result: str = Query(...)):
-    """
-    Handles GET request to receive simulation results.
-    This endpoint is used by the simulate_timeline function to push results.
-    """
     try:
         parsed_result = json.loads(result)
         print(f"\n📬 Received simulation result for {user_name}, Month {month}")
         return {"status": "success", "user": user_name, "month": month, "data": parsed_result}
     except Exception as e:
-        return JSONResponse(status_code=400, content={"status": "error", "message": str(e)})
+        return JSONResponse(status_code=400, content={"status": "error", "message": str(e)}
+"""
     
 def main():
     import uvicorn
-    uvicorn.run("api_app:app", host="192.168.0.109", port=8000, reload=False)
+    uvicorn.run("api_app:app", host="192.168.3.104", port=8000, reload=False)
 
 # If you want to run with `python api_app.py`
 if __name__ == "__main__":

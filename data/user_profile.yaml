@@ -1,26 +1,15 @@
-user_name: "Madhuram"
-age: 22
-occupation: "Student"
-
-income_sources:
-  Freelance: 15000
-  Part-time: 5000
-
-spending_habits:
-  monthly_expenses:
-    rent: 5000
-    utilities: 1500
-    food: 3000
-    transportation: 1000
-    entertainment: 500
-  discretionary_spending_percentage: 0.2
-
-savings:
-  monthly_savings_target: 5000
-  savings_percentage: 0.33
-  opening_balance: 10000
-  financial_goal: "Save ₹1,00,000 in 12 months"
-
-simulation_parameters:
-  simulation_unit: "Months"
-  simulation_steps: 12
+{
+  "user_id": "madhu",
+  "user_name": "madhuram_bohra",
+  "income": 8000,
+  "expenses": [
+    {
+      "name": "food",
+      "amount": 3000
+    }
+  ],
+  "total_expenses": 4000,
+  "goal": "Save 1 crore rs",
+  "financial_type": "risky",
+  "risk_level": "high"
+}

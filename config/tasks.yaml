@@ -14,33 +14,35 @@ simulate_cashflow_task:
       - Financial Goal: {goal}
       - Financial Type: {financial_type}
       - Risk Level: {risk_level}
+      - market_context: {market_context}
+      - inflation : {inflation}
+      - interest_rate : {interest_rate}
+      - cost_of_living_index : {cost_of_living_index}
 
     Simulate the user’s income and expenses for the month based on this profile, their goals, financial type, risk level, and current balance. 
     Use the provided breakdown of expenses and income to populate the output fields. 
     If any income or expense category is missing, treat it as zero. Tailor notes and savings based on the user’s goal, risk level, and financial type.
-
-    {context}
 
   expected_output: |
     [
       {
         "month": number,
         "income": {
-          "salary": number,
-          "freelance": number,
-          "total": number
+          "salary": ,
+          "freelance": ,
+          "total": 
         },
         "expenses": {
-          "needs": number,
-          "wants": number,
-          "luxury": number,
-          "emergency": number,
-          "total": number
+          "needs": ,
+          "wants": ,
+          "luxury": ,
+          "emergency": ,
+          "total": 
         },
-        "savings": number,
-        "debt_taken": number,
-        "debt_repaid": number,
-        "notes": "string"
+        "savings": ,
+        "debt_taken": ,
+        "debt_repaid": ,
+        "notes": 
       }
     ]
   agent: emotional_bias_agent
@@ -58,20 +60,18 @@ discipline_tracker_task:
     <</SYS>>
 
     Checks whether the user followed basic financial discipline rules for the month — e.g., not overspending, saving the target percentage, avoiding unnecessary debt.
-
-    {context}
   expected_output: |
     [
       {
-        "month": number,
+        "month": ,
         "rules_checked": {
-          "expenses_within_income": boolean,
-          "minimum_savings_met": boolean,
-          "unnecessary_debt_taken": boolean
+          "expenses_within_income": ,
+          "minimum_savings_met": ,
+          "unnecessary_debt_taken": 
         },
-        "violations": ["string"],
-        "discipline_score": number, // out of 10
-        "recommendations": ["string"]
+        "violations": [],
+        "discipline_score": , // out of 10
+        "recommendations": []
       }
     ]
   agent: discipline_tracker_agent
@@ -89,8 +89,6 @@ track_goals:
     <</SYS>>
 
     Tracks progress toward each user-defined goal by comparing cumulative savings and allocations against the planned targets. Evaluates if goals are on track, ahead, or behind and suggests adjustments.
-    
-    {context}
 
     Output for the current month only, reflecting the actual trends and context above.
   expected_output: >
@@ -99,20 +97,20 @@ track_goals:
         "month": number,
         "goals": [
           {
-            "name": "string",
-            "target_amount": number,
-            "saved_so_far": number,
-            "expected_by_now": number,
-            "status": "ahead" | "on_track" | "behind",
+            "name": ,
+            "target_amount": ,
+            "saved_so_far": ,
+            "expected_by_now": ,
+            "status": ,
             "priority": number,
-            "adjustment_suggestion": "string"
+            "adjustment_suggestion": 
           }
         ],
         "summary": {
-          "on_track_goals": number,
-          "behind_goals": number,
-          "total_saved": number,
-          "total_required_by_now": number
+          "on_track_goals": ,
+          "behind_goals": ,
+          "total_saved": ,
+          "total_required_by_now": 
         }
       }
     ]
@@ -137,18 +135,16 @@ behavior_tracker_task:
     - "saving_consistency": "consistent", "inconsistent", or "improving"
     - "labels": List up to 2-3 concise behavioral tags (e.g., "high-expense-ratio", "low-savings-rate", "goal-oriented", "impulsive-spender", "steady-saver").
 
-    {context}
-
     Output for the current month only, reflecting the actual trends and context above.
   expected_output: >
       [
         {
           "month": number,
           "traits": {
-            "spending_pattern": "string",
-            "goal_adherence": "string",
-            "saving_consistency": "string",
-            "labels": ["string", "string"]
+            "spending_pattern": ,
+            "goal_adherence": ,
+            "saving_consistency": ,
+            "labels": []
           }
         }
       ]
@@ -175,8 +171,6 @@ karma_tracker_task:
     - Assign a **karma_score** (0-100): Higher for mostly sattvic, lower for tamasic, mixed for rajasic.
     - Assign a **trend**: "Improving", "Declining", or "Neutral" based on changes in karma_score and trait balance compared to previous months.
 
-    {context}
-
     Output for the current month only, reflecting the actual trends and context above.
     
   expected_output: >
@@ -184,11 +178,11 @@ karma_tracker_task:
       {
         "month": number,
         traits : {
-          "sattvic_traits": ["string"],
-          "rajasic_traits": ["string"],
-          "tamasic_traits": ["string"],
+          "sattvic_traits": [],
+          "rajasic_traits": [],
+          "tamasic_traits": [],
           "karma_score": number,   
-          "trend": "string"
+          "trend": 
         }
     ]
   
@@ -215,8 +209,6 @@ financial_strategy_task:
     - If the user is behind, suggest corrective actions (e.g., cut specific expenses, adjust savings targets, reduce risk, build emergency fund).
     - **Reasoning** should briefly explain why these recommendations are appropriate for this month, referencing the user's context.
 
-    {context}
-
     Output for the current month only, reflecting the actual trends and context above.
     
   expected_output: |
@@ -225,8 +217,6 @@ financial_strategy_task:
         "month": number,
         "traits": {
           "recommendations": [
-            "Cut discretionary spending by 10%",
-            "Increase emergency savings goal by 5%"
           ],
           "reasoning": "Overspent on luxury while missing savings target."
         }
