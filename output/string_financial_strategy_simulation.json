@@ -80,5 +80,80 @@
             }
         ],
         "month": 6
+    },
+    {
+        "recommendations": [
+            {
+                "type": "expense_reduction",
+                "description": "Reduce transportation expenses by 20% to free up $150 for debt repayment, building on last month's subscription services cutback",
+                "reasoning": "The user has made progress in reducing subscription services, but transportation expenses remain high. Cutting back on transportation will help accelerate debt repayment and maintain savings momentum."
+            },
+            {
+                "type": "investment_optimization",
+                "description": "Rebalance investment portfolio to increase exposure to low-risk assets and allocate 15% to socially responsible investments, building on last month's rebalancing",
+                "reasoning": "The user's portfolio has responded well to previous rebalancing efforts, and this additional step will further reduce risk and reflect the user's growing interest in socially responsible options."
+            },
+            {
+                "type": "emergency_fund_contribution",
+                "description": "Contribute an additional $1,000 to the emergency fund, building on last month's $750",
+                "reasoning": "The user's emergency fund is still underfunded, and the current market conditions highlight the importance of a cushion for unexpected expenses. This increased contribution will help reach the goal of 6 months of living expenses."
+            },
+            {
+                "type": "debt_repayment",
+                "description": "Allocate an additional $300 towards debt repayment to accelerate progress, building on last month's $200 allocation",
+                "reasoning": "The user's debt repayment has been slow, and the current interest rates suggest that accelerating debt repayment will have a significant impact on long-term financial health."
+            }
+        ],
+        "metadata": {
+            "references_previous_months": true,
+            "builds_on_previous_strategies": true,
+            "improvement_metrics": {
+                "specificity": "improved",
+                "personalization": "improved",
+                "actionability": "improved"
+            }
+        },
+        "notes": [
+            "This month's strategy builds on the successes and learnings from previous months, with particular focus on addressing the challenges identified in months 1 and 2."
+        ],
+        "month": 3
+    },
+    {
+        "recommendations": [
+            {
+                "type": "expense_reduction",
+                "description": "Reduce dining out expenses by 30% to free up $250, building on previous months' reductions in transportation and entertainment expenses",
+                "reasoning": "The user has consistently reduced discretionary spending in previous months, and dining out remains an area of opportunity. Reducing dining out expenses will help accelerate savings and debt repayment."
+            },
+            {
+                "type": "investment_optimization",
+                "description": "Rebalance investment portfolio to allocate 20% to environmentally responsible investments, building on last month's 15% allocation",
+                "reasoning": "The user's portfolio has responded well to previous rebalancing, and this additional step will further reduce risk and reflect the user's growing interest in environmentally responsible options."
+            },
+            {
+                "type": "emergency_fund_contribution",
+                "description": "Contribute an additional $1,250 to the emergency fund, building on last month's $1,000 contribution",
+                "reasoning": "The user's emergency fund is still underfunded, and the current market conditions highlight the importance of a cushion for unexpected expenses. This increased contribution will help reach the goal of 6 months' living expenses."
+            },
+            {
+                "type": "debt_repayment",
+                "description": "Allocate an additional $400 towards debt repayment to accelerate progress, building on last month's $300 allocation",
+                "reasoning": "The user's debt repayment has been slow, and the current interest rates suggest that accelerating debt repayment will have a significant impact on long-term financial health."
+            }
+        ],
+        "metadata": {
+            "references_previous_months": true,
+            "builds_on_previous_strategies": true,
+            "improvement_metrics": {
+                "specificity": "improved",
+                "personalization": "improved",
+                "actionability": "improved"
+            }
+        },
+        "notes": [
+            "This month's strategy builds on the successes and learnings from previous months, with particular focus on addressing the challenges identified in months 1 and 2.",
+            "This month's strategy builds on the successes and learnings from previous months, with particular focus on addressing the challenges identified in month 2 and 3."
+        ],
+        "month": 4
     }
 ]

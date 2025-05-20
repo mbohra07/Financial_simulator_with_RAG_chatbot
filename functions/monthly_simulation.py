@@ -147,7 +147,7 @@ def generate_monthly_reflection_report(user_name, month):
 
 def assign_persona(user_name, month):
     karma_data = load_json('output/karmic_tracker_simulation.json')
-    behavior_data = load_json('output/behavior_tracker_simulatiom.json')
+    behavior_data = load_json('output/behavior_tracker_simulation.json')
     history_data = load_json('data/persona_history.json')
 
     # Extract average karma score for the month

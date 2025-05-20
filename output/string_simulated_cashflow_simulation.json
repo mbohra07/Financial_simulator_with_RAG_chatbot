@@ -87,5 +87,65 @@
             "financial_goal_progress": 0.06
         },
         "month": 5
+    },
+    {
+        "simulation_result": {
+            "user_name": "John Doe",
+            "monthly_income": 5000,
+            "expenses": {
+                "housing": 1500,
+                "food": 800,
+                "transportation": 500,
+                "insurance": 200,
+                "entertainment": 180,
+                "savings": 1000,
+                "misc": 100
+            },
+            "total_expenses": 4380,
+            "financial_goal": "retirement",
+            "financial_type": "conservative",
+            "risk_level": "low",
+            "market_context": "stable",
+            "inflation": 2,
+            "interest_rate": 3,
+            "cost_of_living_index": 120,
+            "current_balance": 11620,
+            "notes": "Excellent job increasing savings and maintaining low expenses! Consider allocating a larger portion to investments for retirement goal.",
+            "recommended_savings": 1100,
+            "recommended_investment": 300,
+            "cash_flow": 620,
+            "month": 3
+        },
+        "month": 3
+    },
+    {
+        "simulation_result": {
+            "name": "John Doe",
+            "income": 5000,
+            "expenses": {
+                "housing": 1500,
+                "food": 800,
+                "transportation": 500,
+                "insurance": 200,
+                "entertainment": 100,
+                "savings": 1700,
+                "misc": 100
+            },
+            "total_expenses": 4700,
+            "financial_goal": "retirement",
+            "financial_type": "conservative",
+            "risk_level": "low",
+            "market_context": "stable",
+            "inflation": 2,
+            "interest_rate": 3,
+            "cost_of_living_index": 120,
+            "current_balance": 13220,
+            "notes": "Excellent job reducing entertainment expenses and increasing savings! Consider exploring tax-advantaged retirement accounts to optimize savings. Also, review transportation expenses to identify areas for reduction.",
+            "recommended_savings": 1800,
+            "recommended_investment": 550,
+            "cash_flow": 300,
+            "month": 6
+        },
+        "month": 6
     }
 ]

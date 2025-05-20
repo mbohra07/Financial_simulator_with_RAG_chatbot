@@ -4,24 +4,29 @@ This replaces the CrewAI implementation in api_app.py.
 Integrated with MongoDB Atlas for persistent storage and learning from past simulations.
 """
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks, File, UploadFile, Form, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
-from typing import List
+from typing import List, Dict, Any, Optional
 import json
 import os
 import uuid
+import shutil
+from pathlib import Path
 from dotenv import load_dotenv
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import agentops
 from langgraph_implementation import simulate_timeline_langgraph
+from teacher_agent import run_teacher_agent, handle_pdf_upload, handle_pdf_removal
 
 # Import MongoDB client
 from database.mongodb_client import (
     get_all_agent_outputs_for_user,
-    get_agent_outputs_for_month
+    get_agent_outputs_for_month,
+    save_chat_message,
+    get_chat_history_for_user
 )
 
 # ************************************************FastAPI configuration************************************************************
@@ -66,6 +71,17 @@ class SimulateRequest(BaseModel):
     simulation_unit: str = "Months"
     user_inputs: dict
 
+# Teacher agent models
+class TeacherQuery(BaseModel):
+    user_id: str
+    query: str
+    pdf_id: Optional[str] = None  # Optional PDF ID to search in a specific PDF
+
+class TeacherResponse(BaseModel):
+    response: str
+    chat_history: List[Dict[str, str]]
+    pdf_id: Optional[str] = None
+
 def run_simulation_background(task_id: str, user_inputs: dict, simulation_steps: int, simulation_unit: str):
     """Background task to run the simulation"""
     try:
@@ -91,7 +107,7 @@ async def start_simulation(payload: SimulationInput, background_tasks: Backgroun
     """Start a simulation in the background and return a task ID"""
     try:
         # Convert pydantic model to dict
-        user_inputs = payload.dict()
+        user_inputs = payload.model_dump()
 
         # Generate a unique task ID
         task_id = str(uuid.uuid4())
@@ -254,6 +270,157 @@ async def get_simulation_result(user_id: str):
         }
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
+
+# Teacher agent endpoints
+@app.post("/user/learning", response_model=TeacherResponse)
+async def learning_endpoint(query: TeacherQuery):
+    """Process a learning query from the user and return a response from the teacher agent"""
+    try:
+        # Get chat history from database
+        chat_history = get_chat_history_for_user(query.user_id)
+
+        # Convert to the format expected by the teacher agent
+        formatted_chat_history = []
+        for msg in chat_history:
+            formatted_chat_history.append({
+                "role": msg.get("role", "user"),
+                "content": msg.get("content", "")
+            })
+
+        # Log PDF ID if provided
+        if query.pdf_id:
+            print(f"📚 Using specific PDF: {query.pdf_id}")
+
+        # Run the teacher agent
+        result = run_teacher_agent(
+            user_query=query.query,
+            user_id=query.user_id,
+            chat_history=formatted_chat_history,
+            pdf_id=query.pdf_id
+        )
+
+        # Save the new messages to the database
+        save_chat_message(query.user_id, "user", query.query)
+        save_chat_message(query.user_id, "assistant", result["response"])
+
+        return TeacherResponse(
+            response=result["response"],
+            chat_history=result["chat_history"],
+            pdf_id=query.pdf_id
+        )
+    except Exception as e:
+        print(f"❌ Error in learning endpoint: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/pdf/chat")
+async def pdf_upload_endpoint(
+    user_id: str = Form(...),
+    pdf_file: UploadFile = File(...)
+):
+    """Upload a PDF file for the teacher agent to use in explanations"""
+    try:
+        # Create temp directory if it doesn't exist
+        temp_dir = Path("temp_pdfs")
+        temp_dir.mkdir(exist_ok=True)
+
+        # Save the uploaded file
+        file_path = temp_dir / f"{user_id}_{pdf_file.filename}"
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(pdf_file.file, buffer)
+
+        # Process the PDF
+        result = handle_pdf_upload(str(file_path), user_id)
+
+        if result["success"]:
+            return {
+                "status": "success",
+                "message": result["message"],
+                "user_id": user_id,
+                "pdf_id": result["pdf_id"],
+                "chunk_count": result.get("chunk_count", 0)
+            }
+        else:
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "status": "error",
+                    "message": result["message"]
+                }
+            )
+    except Exception as e:
+        print(f"❌ Error in PDF upload: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Define a model for PDF removal request
+class PDFRemovalRequest(BaseModel):
+    user_id: str
+    pdf_id: Optional[str] = None
+
+@app.post("/pdf/removed")
+async def pdf_removal_endpoint(request: PDFRemovalRequest):
+    """
+    Remove PDF data for a user or a specific PDF
+
+    Request body:
+        user_id: User identifier
+        pdf_id: Optional PDF ID to remove a specific PDF
+    """
+    try:
+        # Remove PDF data
+        result = handle_pdf_removal(request.user_id, request.pdf_id)
+
+        if result["success"]:
+            return {
+                "status": "success",
+                "message": result["message"],
+                "user_id": request.user_id,
+                "pdf_id": result.get("pdf_id")
+            }
+        else:
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "status": "error",
+                    "message": result["message"]
+                }
+            )
+    except Exception as e:
+        print(f"❌ Error in PDF removal: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/pdf/list")
+async def pdf_list_endpoint(user_id: str):
+    """List all PDFs for a user"""
+    try:
+        # Get MongoDB database
+        from database.mongodb_client import get_database
+        db = get_database()
+
+        # Get all PDFs for this user
+        pdf_docs = list(db["pdf_metadata"].find({"user_id": user_id}))
+
+        # Convert ObjectId to string
+        for doc in pdf_docs:
+            if "_id" in doc:
+                doc["_id"] = str(doc["_id"])
+
+        return {
+            "status": "success",
+            "user_id": user_id,
+            "pdf_count": len(pdf_docs),
+            "pdfs": pdf_docs
+        }
+    except Exception as e:
+        print(f"❌ Error listing PDFs: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
 
 def main():
     import uvicorn

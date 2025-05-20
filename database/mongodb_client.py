@@ -43,6 +43,7 @@ else:
 DB_NAME = "financial_simulation"
 USER_INPUTS_COLLECTION = "user_inputs"
 AGENT_OUTPUTS_COLLECTION = "agent_outputs"
+CHAT_HISTORY_COLLECTION = "chat_history"
 
 # MongoDB client instance
 _client: Optional[MongoClient] = None
@@ -96,6 +97,13 @@ def get_agent_outputs_collection() -> Collection:
     if not USE_MOCK_DB:
         db = get_database()
         return db[AGENT_OUTPUTS_COLLECTION]
+    return None
+
+def get_chat_history_collection() -> Collection:
+    """Get chat history collection."""
+    if not USE_MOCK_DB:
+        db = get_database()
+        return db[CHAT_HISTORY_COLLECTION]
     return None
 
 def close_connection():
@@ -326,3 +334,90 @@ def get_all_agent_outputs_for_user(user_id: str) -> List[Dict[str, Any]]:
 def generate_simulation_id() -> str:
     """Generate a unique simulation ID."""
     return str(uuid.uuid4())
+
+def save_chat_message(user_id: str, role: str, content: str) -> str:
+    """
+    Save a chat message to MongoDB or mock storage.
+
+    Args:
+        user_id: User ID
+        role: Message role (user or assistant)
+        content: Message content
+
+    Returns:
+        ID of the saved message
+    """
+    # Create document
+    document = {
+        "user_id": user_id,
+        "role": role,
+        "content": content,
+        "timestamp": datetime.now().isoformat()
+    }
+
+    if not USE_MOCK_DB:
+        # Use real MongoDB
+        collection = get_chat_history_collection()
+        result = collection.insert_one(document)
+        return str(result.inserted_id)
+    else:
+        # Use mock implementation with file storage
+        doc_id = str(uuid.uuid4())
+        document["_id"] = doc_id
+
+        # Save to file
+        file_path = f"mock_db/chat_history/{doc_id}.json"
+        os.makedirs("mock_db/chat_history", exist_ok=True)
+        with open(file_path, "w") as f:
+            json.dump(document, f, indent=2)
+
+        print(f"💾 Saved chat message to mock DB: {file_path}")
+        return doc_id
+
+def get_chat_history_for_user(user_id: str, limit: int = 50) -> List[Dict[str, Any]]:
+    """
+    Get chat history for a user from MongoDB or mock storage.
+
+    Args:
+        user_id: User ID
+        limit: Maximum number of messages to return
+
+    Returns:
+        List of chat messages
+    """
+    if not USE_MOCK_DB:
+        # Use real MongoDB
+        collection = get_chat_history_collection()
+        cursor = collection.find(
+            {"user_id": user_id},
+            sort=[("timestamp", pymongo.ASCENDING)],
+            limit=limit
+        )
+
+        # Convert ObjectId to string for JSON serialization
+        results = list(cursor)
+        for result in results:
+            result["_id"] = str(result["_id"])
+
+        return results
+    else:
+        # Use mock implementation with file storage
+        chat_dir = "mock_db/chat_history"
+        if not os.path.exists(chat_dir):
+            return []
+
+        # Get all chat files
+        chat_files = []
+        for filename in os.listdir(chat_dir):
+            if filename.endswith(".json"):
+                file_path = os.path.join(chat_dir, filename)
+                with open(file_path, "r") as f:
+                    chat_data = json.load(f)
+                    if chat_data.get("user_id") == user_id:
+                        chat_files.append(chat_data)
+
+        # Sort by timestamp
+        chat_files.sort(key=lambda x: x.get("timestamp", ""))
+
+        # Limit results
+        return chat_files[:limit]

@@ -1,0 +1,37 @@
+[
+  {
+    "title": "Compound Interest",
+    "category": "Investing",
+    "difficulty": "Beginner",
+    "definition": "Compound interest is the interest on a loan or deposit calculated based on both the initial principal and the accumulated interest from previous periods.",
+    "explanation": "Compound interest is like a snowball effect for your money. When you earn interest, that interest gets added to your original amount. Then, in the next period, you earn interest on both your original money AND the interest you already earned. This makes your money grow faster over time. For example, if you invest $100 with 10% annual compound interest, after one year you'll have $110. After the second year, you'll earn 10% on $110, giving you $121 - not just $120 as you would with simple interest."
+  },
+  {
+    "title": "Emergency Fund",
+    "category": "Personal Finance",
+    "difficulty": "Beginner",
+    "definition": "An emergency fund is money set aside to cover unexpected expenses or financial emergencies.",
+    "explanation": "An emergency fund is like a financial safety net. It's money you save specifically for unexpected situations like medical emergencies, car repairs, or losing your job. Most financial experts recommend having enough money to cover 3-6 months of essential expenses. This fund should be kept in a liquid account (like a savings account) that you can access quickly when needed. Having an emergency fund helps prevent you from going into debt when unexpected expenses arise."
+  },
+  {
+    "title": "Dollar-Cost Averaging",
+    "category": "Investing",
+    "difficulty": "Intermediate",
+    "definition": "Dollar-cost averaging is an investment strategy where you invest a fixed amount of money at regular intervals, regardless of the asset's price.",
+    "explanation": "Dollar-cost averaging is like buying groceries every week regardless of price fluctuations. Instead of trying to time the market by investing a large sum all at once, you invest smaller fixed amounts regularly. When prices are high, your fixed amount buys fewer shares; when prices are low, the same amount buys more shares. Over time, this approach can reduce the impact of volatility on your overall purchase. For example, if you invest $100 monthly in a mutual fund, sometimes you'll buy when prices are higher and sometimes when they're lower, but you'll likely pay a reasonable average price over time."
+  },
+  {
+    "title": "Debt-to-Income Ratio",
+    "category": "Credit",
+    "difficulty": "Intermediate",
+    "definition": "The debt-to-income (DTI) ratio is the percentage of your gross monthly income that goes toward paying debts.",
+    "explanation": "Your debt-to-income ratio is like a financial health indicator that lenders use to assess your ability to manage monthly payments and repay debts. To calculate it, divide your total monthly debt payments by your gross monthly income, then multiply by 100 to get a percentage. For example, if you pay $2,000 in monthly debt payments and earn $6,000 per month, your DTI is 33%. Most lenders prefer a DTI under 36%, with housing costs not exceeding 28% of your income. A high DTI suggests you might be overextended financially, which could make it difficult to get approved for new loans or credit."
+  },
+  {
+    "title": "Tax-Loss Harvesting",
+    "category": "Taxes",
+    "difficulty": "Advanced",
+    "definition": "Tax-loss harvesting is the practice of selling investments that have experienced losses to offset capital gains tax liability.",
+    "explanation": "Tax-loss harvesting is like pruning a garden - you cut away the underperforming plants to improve the overall health. When you sell investments at a loss, you can use those losses to reduce your taxable capital gains and potentially reduce your tax bill. For example, if you have $10,000 in capital gains and sell underperforming investments at a $7,000 loss, you'll only be taxed on $3,000 of gains. You can also deduct up to $3,000 of losses against ordinary income if your losses exceed your gains. However, be aware of the 'wash-sale rule,' which prevents you from claiming a loss if you buy the same or a substantially identical investment within 30 days before or after the sale."
+  }
+]
