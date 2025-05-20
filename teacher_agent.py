@@ -12,8 +12,8 @@ import uuid
 import tempfile
 from pathlib import Path
 
-from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_core.documents import Document
@@ -21,8 +21,22 @@ from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI
 from langchain.globals import set_debug
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_community.vectorstores import MongoDBAtlasVectorSearch
-from langchain_community.embeddings import HuggingFaceEmbeddings
+# Try to import the updated MongoDB Atlas Vector Search
+try:
+    from langchain_mongodb import MongoDBAtlasVectorSearch
+    print("✅ Using updated MongoDB Atlas Vector Search from langchain_mongodb")
+except ImportError:
+    # Fall back to the deprecated version
+    from langchain_community.vectorstores import MongoDBAtlasVectorSearch
+    print("⚠️ Using deprecated MongoDB Atlas Vector Search from langchain_community")
+# Try to import the updated HuggingFaceEmbeddings
+try:
+    from langchain_huggingface import HuggingFaceEmbeddings
+    print("✅ Using updated HuggingFaceEmbeddings from langchain_huggingface")
+except ImportError:
+    # Fall back to the deprecated version
+    from langchain_community.embeddings import HuggingFaceEmbeddings
+    print("⚠️ Using deprecated HuggingFaceEmbeddings from langchain_community")
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 import langgraph.graph as lg
@@ -75,7 +89,7 @@ class TeacherAgentState(TypedDict):
 
     # PDF data
     pdf_path: Optional[str]
-    pdf_id: Optional[str]  # PDF ID for specific PDF searches
+    pdf_id: Optional[Union[str, List[str]]]  # PDF ID(s) for specific PDF searches
     pdf_content: Optional[List[Document]]
 
     # Vector search results
@@ -153,28 +167,70 @@ def vectorize_and_store_pdf(documents: List[Document], user_id: str, pdf_name: s
         # Store in PDF metadata collection
         db["pdf_metadata"].insert_one(pdf_metadata)
 
-        # Create vector store
-        vector_store = MongoDBAtlasVectorSearch.from_documents(
-            documents,
-            embeddings,
-            collection=collection,
-            index_name="pdf_vector_index"
-        )
-
-        # Add user_id and pdf_id to metadata for each document
+        # Add user_id and pdf_id to metadata for each document before vectorization
         for i, doc in enumerate(documents):
             doc.metadata["user_id"] = user_id
             doc.metadata["pdf_id"] = pdf_id
             doc.metadata["chunk_id"] = f"{pdf_id}_{i}"
+            doc.metadata["pdf_name"] = pdf_name
 
-            # Update in MongoDB
-            collection.update_one(
-                {"metadata.chunk_id": doc.metadata["chunk_id"]},
-                {"$set": {
-                    "metadata.user_id": user_id,
-                    "metadata.pdf_id": pdf_id
-                }}
-            )
+        # Direct insertion with embeddings - most reliable method
+        print(f"🔄 Directly inserting {len(documents)} documents with embeddings...")
+
+        # Create a list to store successful insertions
+        successful_insertions = 0
+
+        # Process documents in batches to avoid overwhelming the embedding model
+        batch_size = 20
+        for i in range(0, len(documents), batch_size):
+            batch = documents[i:i+batch_size]
+            print(f"🔄 Processing batch {i//batch_size + 1}/{(len(documents) + batch_size - 1)//batch_size}...")
+
+            try:
+                # Get embeddings for the batch
+                texts = [doc.page_content for doc in batch]
+                batch_embeddings = embeddings.embed_documents(texts)
+
+                # Insert documents with embeddings
+                for j, doc in enumerate(batch):
+                    try:
+                        # Create document with embedding
+                        vector_doc = {
+                            "page_content": doc.page_content,
+                            "metadata": doc.metadata,
+                            "embedding": batch_embeddings[j]
+                        }
+
+                        # Insert into MongoDB
+                        collection.insert_one(vector_doc)
+                        successful_insertions += 1
+                    except Exception as e2:
+                        print(f"❌ Error inserting document {i+j}: {e2}")
+            except Exception as e:
+                print(f"❌ Error processing batch: {e}")
+                # Fall back to individual processing
+                for j, doc in enumerate(batch):
+                    try:
+                        # Get embedding for document
+                        embedding = embeddings.embed_query(doc.page_content)
+
+                        # Create document with embedding
+                        vector_doc = {
+                            "page_content": doc.page_content,
+                            "metadata": doc.metadata,
+                            "embedding": embedding
+                        }
+
+                        # Insert into MongoDB
+                        collection.insert_one(vector_doc)
+                        successful_insertions += 1
+                    except Exception as e2:
+                        print(f"❌ Error inserting document {i+j}: {e2}")
+
+        # Verify documents were stored properly
+        count = collection.count_documents({"metadata.pdf_id": pdf_id})
+        print(f"✅ Successfully inserted {successful_insertions}/{len(documents)} documents")
+        print(f"✅ Verified {count} documents in vector store for PDF ID: {pdf_id}")
 
         print(f"✅ Successfully stored PDF with ID: {pdf_id}")
         return pdf_id
@@ -245,7 +301,7 @@ def store_pdf_content_without_vectors(documents: List[Document], user_id: str, p
         print(f"❌ Error storing PDF content: {e}")
         return ""
 
-def search_vector_db(query: str, user_id: str, k: int = 5, pdf_id: str = None) -> List[Document]:
+def search_vector_db(query: str, user_id: str, k: int = 5, pdf_id: Union[str, List[str]] = None) -> List[Document]:
     """
     Search the vector database for relevant documents.
 
@@ -253,7 +309,7 @@ def search_vector_db(query: str, user_id: str, k: int = 5, pdf_id: str = None) -
         query: The search query
         user_id: User identifier
         k: Number of results to return
-        pdf_id: Optional PDF ID to filter by
+        pdf_id: Optional PDF ID or list of PDF IDs to filter by
 
     Returns:
         List of relevant documents
@@ -279,29 +335,137 @@ def search_vector_db(query: str, user_id: str, k: int = 5, pdf_id: str = None) -
         db = get_database()
         collection = db["pdf_vectors"]
 
-        # Create vector store
-        vector_store = MongoDBAtlasVectorSearch(
-            collection,
-            embeddings,
-            index_name="pdf_vector_index"
-        )
-
         # Build filter
         if pdf_id:
-            # Search with user_id and pdf_id filter
-            pre_filter = {"metadata.user_id": user_id, "metadata.pdf_id": pdf_id}
-            print(f"🔍 Searching for PDF ID: {pdf_id}")
+            if isinstance(pdf_id, list):
+                # Multiple PDF IDs
+                if len(pdf_id) > 0:
+                    # Search with user_id and multiple pdf_ids filter
+                    pre_filter = {
+                        "metadata.user_id": user_id,
+                        "metadata.pdf_id": {"$in": pdf_id}
+                    }
+                    print(f"🔍 Searching for multiple PDF IDs: {', '.join(pdf_id)}")
+                else:
+                    # Empty list, fall back to user_id filter only
+                    pre_filter = {"metadata.user_id": user_id}
+                    print(f"🔍 Searching all PDFs for user: {user_id}")
+            else:
+                # Single PDF ID
+                pre_filter = {"metadata.user_id": user_id, "metadata.pdf_id": pdf_id}
+                print(f"🔍 Searching for PDF ID: {pdf_id}")
         else:
             # Search with user_id filter only
             pre_filter = {"metadata.user_id": user_id}
             print(f"🔍 Searching all PDFs for user: {user_id}")
 
-        # Search with filter
-        results = vector_store.similarity_search(
-            query,
-            k=k,
-            pre_filter=pre_filter
-        )
+        # Check if documents exist for this filter
+        doc_count = collection.count_documents(pre_filter)
+        print(f"📊 Found {doc_count} documents matching filter criteria")
+
+        if doc_count == 0:
+            print("⚠️ No documents found matching filter criteria")
+            return []
+
+        # Direct vector similarity search - most reliable method
+        print(f"🔍 Performing direct vector similarity search...")
+
+        try:
+            # Get query embedding
+            query_embedding = embeddings.embed_query(query)
+
+            # Get all documents matching filter
+            matching_docs = list(collection.find(pre_filter))
+            print(f"� Retrieved {len(matching_docs)} documents for processing")
+
+            # Calculate cosine similarity manually
+            from numpy import dot
+            from numpy.linalg import norm
+
+            def cosine_similarity(a, b):
+                if not a or not b:
+                    return 0
+                return dot(a, b) / (norm(a) * norm(b))
+
+            # Score documents based on embedding similarity
+            scored_docs = []
+            for doc in matching_docs:
+                if "embedding" in doc and doc["embedding"]:
+                    # Calculate similarity
+                    similarity = cosine_similarity(query_embedding, doc["embedding"])
+
+                    # Add to scored docs
+                    scored_docs.append((similarity, doc))
+
+            # Sort by similarity (descending)
+            scored_docs.sort(reverse=True, key=lambda x: x[0])
+
+            # Take top k results
+            top_docs = [doc for _, doc in scored_docs[:k]]
+
+            # Convert to Document objects
+            results = []
+            for doc in top_docs:
+                results.append(Document(
+                    page_content=doc.get("page_content", ""),
+                    metadata=doc.get("metadata", {})
+                ))
+
+            print(f"✅ Found {len(results)} relevant documents using vector similarity")
+
+            # If we got results, return them
+            if results:
+                return results
+
+            # If no results from direct vector search, try using the vector store
+            print("⚠️ No results from direct vector search, trying vector store...")
+
+            # Create vector store
+            vector_store = MongoDBAtlasVectorSearch(
+                collection,
+                embeddings,
+                index_name="pdf_vector_index"
+            )
+
+            # Search with filter
+            results = vector_store.similarity_search(
+                query,
+                k=k,
+                pre_filter=pre_filter
+            )
+
+            print(f"✅ Vector store search completed with {len(results)} results")
+            return results
+
+        except Exception as e:
+            print(f"❌ Error in vector search: {e}")
+            import traceback
+            traceback.print_exc()
+
+            # Try using the vector store as fallback
+            try:
+                print("⚠️ Trying vector store as fallback...")
+
+                # Create vector store
+                vector_store = MongoDBAtlasVectorSearch(
+                    collection,
+                    embeddings,
+                    index_name="pdf_vector_index"
+                )
+
+                # Search with filter
+                results = vector_store.similarity_search(
+                    query,
+                    k=k,
+                    pre_filter=pre_filter
+                )
+
+                print(f"✅ Vector store search completed with {len(results)} results")
+                return results
+            except Exception as e2:
+                print(f"❌ Error in vector store fallback: {e2}")
+                # Return empty results
+                return []
 
         print(f"✅ Found {len(results)} relevant PDF pages using vector search")
         return results
@@ -312,7 +476,7 @@ def search_vector_db(query: str, user_id: str, k: int = 5, pdf_id: str = None) -
         # Try alternative approach
         return search_pdf_content_without_vectors(query, user_id, k, pdf_id)
 
-def search_pdf_content_without_vectors(query: str, user_id: str, k: int = 5, pdf_id: str = None) -> List[Document]:
+def search_pdf_content_without_vectors(query: str, user_id: str, k: int = 5, pdf_id: Union[str, List[str]] = None) -> List[Document]:
     """
     Search PDF content directly without using vectors.
 
@@ -320,7 +484,7 @@ def search_pdf_content_without_vectors(query: str, user_id: str, k: int = 5, pdf
         query: The search query
         user_id: User identifier
         k: Number of results to return
-        pdf_id: Optional PDF ID to filter by
+        pdf_id: Optional PDF ID or list of PDF IDs to filter by
 
     Returns:
         List of relevant documents
@@ -343,9 +507,20 @@ def search_pdf_content_without_vectors(query: str, user_id: str, k: int = 5, pdf
 
         # Build filter
         if pdf_id:
-            # Get documents for this user and PDF
-            filter_query = {"user_id": user_id, "pdf_id": pdf_id}
-            print(f"🔍 Searching for PDF ID: {pdf_id}")
+            if isinstance(pdf_id, list):
+                # Multiple PDF IDs
+                if len(pdf_id) > 0:
+                    # Get documents for this user and multiple PDFs
+                    filter_query = {"user_id": user_id, "pdf_id": {"$in": pdf_id}}
+                    print(f"🔍 Searching for multiple PDF IDs: {', '.join(pdf_id)}")
+                else:
+                    # Empty list, fall back to user_id filter only
+                    filter_query = {"user_id": user_id}
+                    print(f"🔍 Searching all PDFs for user: {user_id}")
+            else:
+                # Single PDF ID
+                filter_query = {"user_id": user_id, "pdf_id": pdf_id}
+                print(f"🔍 Searching for PDF ID: {pdf_id}")
         else:
             # Get all documents for this user
             filter_query = {"user_id": user_id}
@@ -539,27 +714,53 @@ def remove_pdf(user_id: str, pdf_id: str = None) -> bool:
 # Define agent nodes
 def retrieve_context_node(state: TeacherAgentState) -> TeacherAgentState:
     """Retrieve relevant context from vector databases."""
-    print(f"🔍 Retrieving context for query: {state['user_query']}")
+    # Extract the current query directly from state to ensure we're using the latest
+    current_query = state["user_query"]
+    print(f"🔍 Retrieving context for query: '{current_query}'")
 
     user_id = state["user_id"]
-    query = state["user_query"]
-    pdf_id = state.get("pdf_id")  # Get PDF ID if available
+    pdf_id = state.get("pdf_id")  # Get PDF ID(s) if available
+
+    # Log the state to help with debugging
+    print(f"📋 Current state - user_id: {user_id}, query: '{current_query}'")
+    if pdf_id:
+        if isinstance(pdf_id, list):
+            print(f"📋 PDF IDs: {', '.join(pdf_id)}")
+        else:
+            print(f"📋 PDF ID: {pdf_id}")
 
     # Search PDF vectors if available
     if pdf_id:
-        print(f"🔍 Searching specific PDF: {pdf_id}")
-        pdf_results = search_vector_db(query, user_id, pdf_id=pdf_id)
+        if isinstance(pdf_id, list):
+            print(f"🔍 Searching multiple PDFs: {', '.join(pdf_id)}")
+        else:
+            print(f"🔍 Searching specific PDF: {pdf_id}")
+
+        # Try vector search first
+        pdf_results = search_vector_db(current_query, user_id, pdf_id=pdf_id)
+
+        # If vector search returns no results, try direct content search
+        if len(pdf_results) == 0:
+            print("⚠️ Vector search returned no results, trying direct content search")
+            pdf_results = search_pdf_content_without_vectors(current_query, user_id, k=5, pdf_id=pdf_id)
     else:
         print(f"🔍 Searching all PDFs for user: {user_id}")
-        pdf_results = search_vector_db(query, user_id)
+
+        # Try vector search first
+        pdf_results = search_vector_db(current_query, user_id)
+
+        # If vector search returns no results, try direct content search
+        if len(pdf_results) == 0:
+            print("⚠️ Vector search returned no results, trying direct content search")
+            pdf_results = search_pdf_content_without_vectors(current_query, user_id, k=5)
 
     # Search financial knowledge base
-    kb_results = search_financial_knowledge_base(query)
+    kb_results = search_financial_knowledge_base(current_query)
 
     # Combine results
     all_results = pdf_results + kb_results
 
-    print(f"✅ Found {len(pdf_results)} PDF results and {len(kb_results)} knowledge base results")
+    print(f"✅ Found {len(pdf_results)} PDF results and {len(kb_results)} knowledge base results for query: '{current_query}'")
 
     # Update state
     return {
@@ -569,14 +770,16 @@ def retrieve_context_node(state: TeacherAgentState) -> TeacherAgentState:
 
 def generate_response_node(state: TeacherAgentState) -> TeacherAgentState:
     """Generate a response using the teacher agent."""
-    print(f"🧠 Generating response for query: {state['user_query']}")
+    # Extract the current query directly from state to ensure we're using the latest
+    current_query = state["user_query"]
+    print(f"🧠 Generating response for query: '{current_query}'")
 
     # Format context from vector search
     context = ""
     if state.get("vector_search_results"):
         context = "\n\n".join([doc.page_content for doc in state["vector_search_results"]])
 
-    # Format chat history
+    # Format chat history - we'll keep it for context but ensure the model prioritizes the current query
     formatted_history = []
     for message in state.get("chat_history", []):
         if message.get("role") == "user":
@@ -584,31 +787,45 @@ def generate_response_node(state: TeacherAgentState) -> TeacherAgentState:
         elif message.get("role") == "assistant":
             formatted_history.append(AIMessage(content=message.get("content", "")))
 
-    # Create prompt
-    prompt = ChatPromptTemplate.from_messages([
-        SystemMessage(content="""You are a friendly and knowledgeable financial teacher.
-Your goal is to explain financial concepts in simple, easy-to-understand language.
+    # Create prompt with explicit query reference and clear instructions
+    # Using f-strings to directly insert the query into the prompt
+    system_message = SystemMessage(content=f"""You are a friendly and knowledgeable financial teacher.
+Your goal is to explain concepts in simple, easy-to-understand language.
 Always be supportive, patient, and encouraging. Use analogies and examples to make complex concepts accessible.
-When explaining financial terms, avoid jargon and break down concepts step by step.
+When explaining terms, avoid jargon and break down concepts step by step.
 If you're not sure about something, be honest about it rather than making up information.
 
-CRITICAL INSTRUCTION: You MUST respond ONLY to the exact query provided in the "User Query" field.
-DO NOT respond to any other topic or query that might appear elsewhere in the context or history.
-The only query you should respond to is the one explicitly labeled as "User Query: {query}".
+CRITICAL INSTRUCTION: You are answering this specific question: "{current_query}"
+While you can use the chat history for context, you MUST respond ONLY to the current question.
+DO NOT include phrases like "User Query:" in your response.
+DO NOT repeat the question in your response.
+Just answer the question directly and conversationally.
 
 If you have access to PDF content or knowledge base information, use it to enhance your explanations,
-but always maintain a conversational and educational tone."""),
-        MessagesPlaceholder(variable_name="history"),
-        HumanMessage(content="""
-The EXACT user query that you MUST respond to is: "{query}"
+but always maintain a conversational and educational tone.""")
+
+    # Add chat history messages if available
+    messages = [system_message]
+    if formatted_history:
+        messages.extend(formatted_history[-4:])  # Include last 4 messages for context
+
+    # Add the current query as the final message
+    messages.append(
+        HumanMessage(content=f"""
+ANSWER THIS QUESTION: {current_query}
 
 Relevant Context:
-{context}
+{{context}}
 
-IMPORTANT: Your response must directly address this query: "{query}"
-Do not respond to any other topic that might appear in the context or history.
-Explain this financial concept in simple terms that anyone can understand.""")
-    ])
+IMPORTANT REMINDER:
+1. Answer ONLY the question above: "{current_query}"
+2. Do NOT include "User Query:" in your response
+3. Do NOT repeat the question in your response
+4. Just answer directly and conversationally
+""")
+    )
+
+    prompt = ChatPromptTemplate.from_messages(messages)
 
     # Get LLM
     llm = get_llm("groq/llama3-70b-8192")  # Using Llama 3 for teaching
@@ -618,11 +835,15 @@ Explain this financial concept in simple terms that anyone can understand.""")
 
     # Execute chain
     try:
+        # Log the exact query being sent to the LLM
+        print(f"📝 Sending query to LLM: '{current_query}'")
+
+        # Pass the context - the query and chat history are already in the prompt
         result = chain.invoke({
-            "history": formatted_history,
-            "query": state["user_query"],
             "context": context
         })
+
+        print(f"✅ LLM response generated for query: '{current_query}'")
 
         # Update state
         return {
@@ -631,6 +852,8 @@ Explain this financial concept in simple terms that anyone can understand.""")
         }
     except Exception as e:
         print(f"❌ Error in generate_response_node: {e}")
+        import traceback
+        traceback.print_exc()
         return {
             **state,
             "response": "I'm sorry, I encountered an error while trying to answer your question. Please try again."
@@ -657,7 +880,7 @@ def create_teacher_agent_graph():
     return workflow.compile()
 
 # Main function to run the teacher agent
-def run_teacher_agent(user_query: str, user_id: str, chat_history: List[Dict[str, str]] = None, pdf_id: str = None) -> Dict[str, Any]:
+def run_teacher_agent(user_query: str, user_id: str, chat_history: List[Dict[str, str]] = None, pdf_id: Union[str, List[str]] = None) -> Dict[str, Any]:
     """
     Run the teacher agent to answer a user query.
 
@@ -665,12 +888,19 @@ def run_teacher_agent(user_query: str, user_id: str, chat_history: List[Dict[str
         user_query: The user's question
         user_id: User identifier
         chat_history: Optional chat history
-        pdf_id: Optional PDF ID to search in a specific PDF
+        pdf_id: Optional PDF ID or list of PDF IDs to search in specific PDF(s)
 
     Returns:
         Dict with response and updated chat history
     """
-    print(f"🚀 Running teacher agent for user {user_id}")
+    print(f"🚀 Running teacher agent for user {user_id} with query: '{user_query}'")
+
+    # Log PDF ID information if provided
+    if pdf_id:
+        if isinstance(pdf_id, list):
+            print(f"📚 Using multiple PDFs: {', '.join(pdf_id)}")
+        else:
+            print(f"📚 Using specific PDF: {pdf_id}")
 
     # Create the workflow graph
     workflow = create_teacher_agent_graph()
@@ -679,10 +909,22 @@ def run_teacher_agent(user_query: str, user_id: str, chat_history: List[Dict[str
     if chat_history is None:
         chat_history = []
 
-    # Initialize state
+    # Make a copy of chat history to avoid modifying the original
+    chat_history_copy = chat_history.copy()
+
+    # Print the last few messages from chat history for debugging
+    if chat_history_copy:
+        print(f"📜 Chat history has {len(chat_history_copy)} messages")
+        if len(chat_history_copy) > 0:
+            print(f"📜 Last message in chat history - Role: {chat_history_copy[-1].get('role')}, Content: {chat_history_copy[-1].get('content', '')[:50]}...")
+            print(f"📜 Current query: '{user_query}'")
+    else:
+        print(f"📜 No chat history available. Starting fresh conversation with query: '{user_query}'")
+
+    # Initialize state with explicit query
     initial_state = {
-        "user_query": user_query,
-        "chat_history": chat_history,
+        "user_query": user_query.strip(),  # Ensure query is trimmed
+        "chat_history": chat_history_copy,
         "user_id": user_id,
         "pdf_path": None,
         "pdf_id": pdf_id,  # Include PDF ID if provided
@@ -691,6 +933,8 @@ def run_teacher_agent(user_query: str, user_id: str, chat_history: List[Dict[str
         "response": None
     }
 
+    print(f"🔄 Initializing workflow with query: '{user_query}'")
+
     # Run the workflow
     try:
         # Execute the workflow
@@ -698,6 +942,9 @@ def run_teacher_agent(user_query: str, user_id: str, chat_history: List[Dict[str
 
         # Get the response
         response = result.get("response", "I'm sorry, I couldn't generate a response.")
+
+        print(f"✅ Workflow completed for query: '{user_query}'")
+        print(f"📝 Response generated: '{response[:50]}...'")
 
         # Update chat history
         chat_history.append({"role": "user", "content": user_query})
@@ -765,36 +1012,79 @@ def handle_pdf_upload(pdf_path: str, user_id: str) -> dict:
         return {"success": False, "pdf_id": "", "message": str(e)}
 
 # Function to remove PDF data
-def handle_pdf_removal(user_id: str, pdf_id: str = None) -> dict:
+def handle_pdf_removal(user_id: str, pdf_id: Union[str, List[str]] = None) -> dict:
     """
-    Remove PDF data for a user or a specific PDF.
+    Remove PDF data for a user or specific PDF(s).
 
     Args:
         user_id: User identifier
-        pdf_id: Optional PDF ID to remove a specific PDF
+        pdf_id: Optional PDF ID or list of PDF IDs to remove
 
     Returns:
         Dictionary with status and message
     """
     try:
         if pdf_id:
-            print(f"🗑️ Removing PDF with ID {pdf_id} for user {user_id}")
-            success = remove_pdf(user_id, pdf_id)
+            if isinstance(pdf_id, list):
+                # Multiple PDF IDs
+                if len(pdf_id) > 0:
+                    print(f"🗑️ Removing multiple PDFs: {', '.join(pdf_id)} for user {user_id}")
+                    success = True
+                    for single_pdf_id in pdf_id:
+                        # Remove each PDF individually
+                        if not remove_pdf(user_id, single_pdf_id):
+                            success = False
 
-            if success:
-                return {
-                    "success": True,
-                    "message": f"Successfully removed PDF with ID: {pdf_id}",
-                    "user_id": user_id,
-                    "pdf_id": pdf_id
-                }
+                    if success:
+                        return {
+                            "success": True,
+                            "message": f"Successfully removed {len(pdf_id)} PDFs",
+                            "user_id": user_id,
+                            "pdf_id": pdf_id
+                        }
+                    else:
+                        return {
+                            "success": False,
+                            "message": f"Failed to remove some or all of the specified PDFs",
+                            "user_id": user_id,
+                            "pdf_id": pdf_id
+                        }
+                else:
+                    # Empty list, treat as removing all PDFs
+                    print(f"🗑️ Removing all PDFs for user {user_id} (empty PDF ID list provided)")
+                    success = remove_pdf(user_id)
+
+                    if success:
+                        return {
+                            "success": True,
+                            "message": f"Successfully removed all PDFs for user: {user_id}",
+                            "user_id": user_id
+                        }
+                    else:
+                        return {
+                            "success": False,
+                            "message": f"Failed to remove PDFs for user: {user_id}",
+                            "user_id": user_id
+                        }
             else:
-                return {
-                    "success": False,
-                    "message": f"Failed to remove PDF with ID: {pdf_id}",
-                    "user_id": user_id,
-                    "pdf_id": pdf_id
-                }
+                # Single PDF ID
+                print(f"🗑️ Removing PDF with ID {pdf_id} for user {user_id}")
+                success = remove_pdf(user_id, pdf_id)
+
+                if success:
+                    return {
+                        "success": True,
+                        "message": f"Successfully removed PDF with ID: {pdf_id}",
+                        "user_id": user_id,
+                        "pdf_id": pdf_id
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "message": f"Failed to remove PDF with ID: {pdf_id}",
+                        "user_id": user_id,
+                        "pdf_id": pdf_id
+                    }
         else:
             print(f"🗑️ Removing all PDFs for user {user_id}")
             success = remove_pdf(user_id)

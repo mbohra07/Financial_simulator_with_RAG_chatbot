@@ -8,7 +8,7 @@ from fastapi import FastAPI, HTTPException, BackgroundTasks, File, UploadFile, F
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 import json
 import os
 import uuid
@@ -75,12 +75,11 @@ class SimulateRequest(BaseModel):
 class TeacherQuery(BaseModel):
     user_id: str
     query: str
-    pdf_id: Optional[str] = None  # Optional PDF ID to search in a specific PDF
+    pdf_id: Optional[Union[str, List[str]]] = None  # Optional PDF ID(s) to search in specific PDF(s)
 
 class TeacherResponse(BaseModel):
+    """Response model for the teacher agent endpoint"""
     response: str
-    chat_history: List[Dict[str, str]]
-    pdf_id: Optional[str] = None
 
 def run_simulation_background(task_id: str, user_inputs: dict, simulation_steps: int, simulation_unit: str):
     """Background task to run the simulation"""
@@ -276,8 +275,10 @@ async def get_simulation_result(user_id: str):
 async def learning_endpoint(query: TeacherQuery):
     """Process a learning query from the user and return a response from the teacher agent"""
     try:
-        # Get chat history from database
-        chat_history = get_chat_history_for_user(query.user_id)
+        print(f"📥 Received learning request - user_id: {query.user_id}, query: '{query.query}'")
+
+        # Get chat history from database but limit to last 10 messages to avoid overwhelming context
+        chat_history = get_chat_history_for_user(query.user_id, limit=10)
 
         # Convert to the format expected by the teacher agent
         formatted_chat_history = []
@@ -287,26 +288,44 @@ async def learning_endpoint(query: TeacherQuery):
                 "content": msg.get("content", "")
             })
 
-        # Log PDF ID if provided
-        if query.pdf_id:
-            print(f"📚 Using specific PDF: {query.pdf_id}")
+        print(f"📜 Retrieved {len(formatted_chat_history)} chat history messages")
+        if formatted_chat_history:
+            print(f"📜 Most recent message - Role: {formatted_chat_history[-1].get('role')}, Content: {formatted_chat_history[-1].get('content', '')[:50]}...")
 
-        # Run the teacher agent
+        # Handle PDF IDs
+        pdf_id_param = None
+        if query.pdf_id:
+            if isinstance(query.pdf_id, list):
+                # If multiple PDF IDs are provided
+                print(f"📚 Using multiple PDFs: {', '.join(query.pdf_id)}")
+                if len(query.pdf_id) > 0:
+                    pdf_id_param = query.pdf_id
+            else:
+                # Single PDF ID
+                print(f"📚 Using specific PDF: {query.pdf_id}")
+                pdf_id_param = query.pdf_id
+
+        # Ensure query is properly formatted
+        current_query = query.query.strip()
+        print(f"🔍 Processing query: '{current_query}'")
+
+        # Run the teacher agent with fresh state
         result = run_teacher_agent(
-            user_query=query.query,
+            user_query=current_query,
             user_id=query.user_id,
             chat_history=formatted_chat_history,
-            pdf_id=query.pdf_id
+            pdf_id=pdf_id_param
         )
 
+        # Log the response
+        print(f"✅ Teacher agent response: '{result['response'][:50]}...'")
+
         # Save the new messages to the database
-        save_chat_message(query.user_id, "user", query.query)
+        save_chat_message(query.user_id, "user", current_query)
         save_chat_message(query.user_id, "assistant", result["response"])
 
         return TeacherResponse(
-            response=result["response"],
-            chat_history=result["chat_history"],
-            pdf_id=query.pdf_id
+            response=result["response"]
         )
     except Exception as e:
         print(f"❌ Error in learning endpoint: {e}")
@@ -358,7 +377,7 @@ async def pdf_upload_endpoint(
 # Define a model for PDF removal request
 class PDFRemovalRequest(BaseModel):
     user_id: str
-    pdf_id: Optional[str] = None
+    pdf_id: Optional[Union[str, List[str]]] = None
 
 @app.post("/pdf/removed")
 async def pdf_removal_endpoint(request: PDFRemovalRequest):

@@ -20,14 +20,15 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# MongoDB Atlas connection string
+# MongoDB Atlas connection strings
 MONGODB_URI = os.getenv("MONGODB_URI")
+MONGODB_URI_FALLBACK = os.getenv("MONGODB_URI_FALLBACK")
 
 # Flag to determine if we're using real MongoDB or mock
 USE_MOCK_DB = False
 
 # Check if MongoDB URI is available
-if not MONGODB_URI:
+if not MONGODB_URI and not MONGODB_URI_FALLBACK:
     # Use a mock MongoDB implementation
     USE_MOCK_DB = True
     print(f"⚠️ No MongoDB URI found in environment variables")
@@ -36,8 +37,10 @@ if not MONGODB_URI:
     # Create mock DB directories
     os.makedirs("mock_db/user_inputs", exist_ok=True)
     os.makedirs("mock_db/agent_outputs", exist_ok=True)
+    os.makedirs("mock_db/chat_history", exist_ok=True)
+    os.makedirs("mock_db/pdf_content", exist_ok=True)
 else:
-    print(f"📊 MongoDB URI found. Will attempt connection with enhanced security options.")
+    print(f"📊 MongoDB URI found. Will attempt connection.")
 
 # Database and collection names
 DB_NAME = "financial_simulation"
@@ -53,29 +56,54 @@ def get_client() -> MongoClient:
     global _client, USE_MOCK_DB
     if not USE_MOCK_DB:
         if _client is None:
-            try:
-                # Add explicit TLS options to the connection
-                if MONGODB_URI and "?" in MONGODB_URI:
-                    # If URI already has query parameters, append new ones
-                    connection_uri = f"{MONGODB_URI}&tls=true&tlsAllowInvalidCertificates=false&retryWrites=true&w=majority"
-                elif MONGODB_URI:
-                    # If URI has no query parameters, add them with ?
-                    connection_uri = f"{MONGODB_URI}?tls=true&tlsAllowInvalidCertificates=false&retryWrites=true&w=majority"
-                else:
-                    connection_uri = MONGODB_URI
+            # Try primary connection string first
+            if MONGODB_URI:
+                try:
+                    print(f"🔌 Connecting to MongoDB using primary URI...")
+                    # Create client with simplified settings
+                    _client = MongoClient(
+                        MONGODB_URI,
+                        serverSelectionTimeoutMS=5000,  # Fail fast if can't connect
+                        connectTimeoutMS=5000,
+                        socketTimeoutMS=5000
+                    )
 
-                print(f"🔌 Connecting to MongoDB with enhanced TLS options...")
-                _client = MongoClient(connection_uri)
-                # Test connection
-                _client.server_info()
-                print(f"✅ Successfully connected to MongoDB")
-            except Exception as e:
-                print(f"⚠️ MongoDB connection failed: {e}")
-                print("⚠️ Falling back to mock implementation")
-                USE_MOCK_DB = True
-                # Create mock DB directories
-                os.makedirs("mock_db/user_inputs", exist_ok=True)
-                os.makedirs("mock_db/agent_outputs", exist_ok=True)
+                    # Test connection
+                    _client.server_info()
+                    print(f"✅ Successfully connected to MongoDB using primary URI")
+                    return _client
+                except Exception as e:
+                    print(f"⚠️ Primary MongoDB connection failed: {e}")
+                    print(f"⚠️ Trying fallback connection string...")
+
+            # Try fallback connection string
+            if MONGODB_URI_FALLBACK:
+                try:
+                    print(f"🔌 Connecting to MongoDB using fallback URI...")
+                    # Create client with simplified settings
+                    _client = MongoClient(
+                        MONGODB_URI_FALLBACK,
+                        serverSelectionTimeoutMS=5000,
+                        connectTimeoutMS=5000,
+                        socketTimeoutMS=5000
+                    )
+
+                    # Test connection
+                    _client.server_info()
+                    print(f"✅ Successfully connected to MongoDB using fallback URI")
+                    return _client
+                except Exception as e:
+                    print(f"⚠️ Fallback MongoDB connection failed: {e}")
+
+            # If we get here, both connection attempts failed
+            print("⚠️ All MongoDB connection attempts failed. Falling back to mock implementation")
+            USE_MOCK_DB = True
+            # Create mock DB directories
+            os.makedirs("mock_db/user_inputs", exist_ok=True)
+            os.makedirs("mock_db/agent_outputs", exist_ok=True)
+            os.makedirs("mock_db/chat_history", exist_ok=True)
+            os.makedirs("mock_db/pdf_content", exist_ok=True)
+            print("✅ Created mock database directories for local storage")
     return _client
 
 def get_database() -> Database:
@@ -388,9 +416,11 @@ def get_chat_history_for_user(user_id: str, limit: int = 50) -> List[Dict[str, A
     if not USE_MOCK_DB:
         # Use real MongoDB
         collection = get_chat_history_collection()
+
+        # Get the most recent messages by sorting by timestamp in descending order
         cursor = collection.find(
             {"user_id": user_id},
-            sort=[("timestamp", pymongo.ASCENDING)],
+            sort=[("timestamp", pymongo.DESCENDING)],
             limit=limit
         )
 
@@ -398,6 +428,13 @@ def get_chat_history_for_user(user_id: str, limit: int = 50) -> List[Dict[str, A
         results = list(cursor)
         for result in results:
             result["_id"] = str(result["_id"])
+
+        # Reverse the results to get them in chronological order (oldest first)
+        results.reverse()
+
+        print(f"📊 Retrieved {len(results)} chat messages from MongoDB for user {user_id}")
+        if results:
+            print(f"📊 Most recent message: {results[-1].get('content', '')[:50]}...")
 
         return results
     else:
@@ -416,8 +453,17 @@ def get_chat_history_for_user(user_id: str, limit: int = 50) -> List[Dict[str, A
                     if chat_data.get("user_id") == user_id:
                         chat_files.append(chat_data)
 
-        # Sort by timestamp
-        chat_files.sort(key=lambda x: x.get("timestamp", ""))
+        # Sort by timestamp (newest first)
+        chat_files.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
 
-        # Limit results
-        return chat_files[:limit]
+        # Take the most recent messages
+        recent_messages = chat_files[:limit]
+
+        # Reverse to get chronological order (oldest first)
+        recent_messages.reverse()
+
+        print(f"📊 Retrieved {len(recent_messages)} chat messages from mock DB for user {user_id}")
+        if recent_messages:
+            print(f"📊 Most recent message: {recent_messages[-1].get('content', '')[:50]}...")
+
+        return recent_messages
