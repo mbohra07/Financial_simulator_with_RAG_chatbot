@@ -1,0 +1,180 @@
+[
+    {
+        "goals": {
+            "emergency_fund": {
+                "target": 1000,
+                "current": 800,
+                "status": "behind",
+                "adjustment": "Increase monthly allocation by $50"
+            },
+            "retirement_savings": {
+                "target": 500,
+                "current": 450,
+                "status": "on_track",
+                "adjustment": "Maintain current allocation"
+            },
+            "vacation_fund": {
+                "target": 2000,
+                "current": 1500,
+                "status": "ahead",
+                "adjustment": "Reduce monthly allocation by $25"
+            }
+        },
+        "trends": {
+            "overall": "improving",
+            "emergency_fund": "declining",
+            "retirement_savings": "stagnant",
+            "vacation_fund": "improving"
+        },
+        "month": 1
+    },
+    {
+        "goals": {
+            "emergency_fund": {
+                "target": 1000,
+                "current": 850,
+                "status": "behind",
+                "adjustment": "Increase monthly allocation by $75, consider reducing discretionary spending"
+            },
+            "retirement_savings": {
+                "target": 500,
+                "current": 475,
+                "status": "on_track",
+                "adjustment": "Maintain current allocation, consider increasing by 1% in 3 months"
+            },
+            "vacation_fund": {
+                "target": 2000,
+                "current": 1625,
+                "status": "ahead",
+                "adjustment": "Reduce monthly allocation by $15, consider allocating excess to emergency fund"
+            }
+        },
+        "trends": {
+            "overall": "improving",
+            "emergency_fund": "declining",
+            "retirement_savings": "improving",
+            "vacation_fund": "improving"
+        },
+        "month": 2
+    },
+    {
+        "goals": {
+            "emergency_fund": {
+                "target": 1000,
+                "current": 1025,
+                "status": "ahead",
+                "adjustment": "Reduce monthly allocation by $25, consider allocating excess to retirement savings"
+            },
+            "retirement_savings": {
+                "target": 500,
+                "current": 490,
+                "status": "on_track",
+                "adjustment": "Maintain current allocation, consider increasing by 1% in 3 months"
+            },
+            "vacation_fund": {
+                "target": 2000,
+                "current": 1985,
+                "status": "ahead",
+                "adjustment": "Reduce monthly allocation by $10, consider allocating excess to emergency fund"
+            }
+        },
+        "trends": {
+            "overall": "improving",
+            "emergency_fund": "improving",
+            "retirement_savings": "on_track",
+            "vacation_fund": "improving"
+        },
+        "month": 3,
+        "reward": "Consistent progress toward all goals! Consider reviewing and adjusting targets in 3 months."
+    },
+    {
+        "goals": {
+            "emergency_fund": {
+                "target": 1025,
+                "progress": 1050,
+                "status": "ahead",
+                "adjustment": "Reduce monthly allocation by $50, consider allocating excess to retirement savings"
+            },
+            "retirement_savings": {
+                "target": 500,
+                "current": 510,
+                "status": "ahead",
+                "adjustment": "Increase monthly allocation by 1%, consider allocating excess to vacation fund"
+            },
+            "vacation_fund": {
+                "target": 2000,
+                "current": 2020,
+                "status": "ahead",
+                "adjustment": "Reduce monthly allocation by $20, consider allocating excess to emergency fund"
+            }
+        },
+        "trends": {
+            "overall": "improving",
+            "emergency_fund": "improving",
+            "retirement_savings": "improving",
+            "vacation_fund": "improving"
+        },
+        "month": 4,
+        "reward": "Consistent progress toward all goals! Consider reviewing and adjusting targets in 2 months."
+    },
+    {
+        "goals": {
+            "emergency_fund": {
+                "target": 1025,
+                "progress": 1100,
+                "status": "ahead",
+                "adjustment": "Consider allocating excess to retirement savings and review emergency fund target in 2 months"
+            },
+            "retirement_savings": {
+                "target": 500,
+                "current": 520,
+                "status": "ahead",
+                "adjustment": "Increase monthly allocation by 1.5%, consider allocating excess to vacation fund"
+            },
+            "vacation_fund": {
+                "target": 2000,
+                "current": 2050,
+                "status": "ahead",
+                "adjustment": "Reduce monthly allocation by $30, consider allocating excess to emergency fund"
+            }
+        },
+        "trends": {
+            "overall": "improving",
+            "emergency_fund": "improving",
+            "retirement_savings": "improving",
+            "vacation_fund": "improving"
+        },
+        "month": 5,
+        "reward": "Consistent progress toward all goals! Consider reviewing and adjusting targets in 1 month."
+    },
+    {
+        "goals": {
+            "emergency_fund": {
+                "target": 1025,
+                "progress": 1150,
+                "status": "ahead",
+                "adjustment": "Consider allocating excess to retirement savings and review emergency fund target in 1 month. Explore higher-yield savings options and diversify your savings portfolio."
+            },
+            "retirement_savings": {
+                "target": 500,
+                "current": 540,
+                "status": "ahead",
+                "adjustment": "Increase monthly allocation by 2%, consider allocating excess to vacation fund. Review investment opportunities to maximize returns."
+            },
+            "vacation_fund": {
+                "target": 2000,
+                "current": 2100,
+                "status": "",
+                "adjustment": "Reduce monthly allocation by $40, consider allocating excess to emergency fund. Review vacation fund target in 2 months."
+            }
+        },
+        "trends": {
+            "overall": "improving",
+            "emergency_fund": "improving",
+            "retirement_savings": "improving",
+            "vacation_fund": "improving"
+        },
+        "month": 6,
+        "reward": "Consistent progress toward all goals! You're ahead of target and diversifying your savings. Explore investment opportunities to maximize returns. Review and adjust targets in 1 month."
+    }
+]

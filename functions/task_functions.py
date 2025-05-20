@@ -73,8 +73,8 @@ def build_simulated_cashflow_context(month_number, user_id, flag=True):
             trend_2 = "User has taken on debt in some months."
 
         # Final Context Prompt
-        context = f"""You are an intelligent financial assistant helping a user build better financial habits.\n 
-        Use their actual financial journey below to deliver more personalized, empathetic, and context-aware feedback.\n\n📊 
+        context = f"""You are an intelligent financial assistant helping a user build better financial habits.\n
+        Use their actual financial journey below to deliver more personalized, empathetic, and context-aware feedback.\n\n📊
         Summary of User’s Financial Journey (Month 1 to {month_number}):\n
         - Total Months Tracked: {n}\n
         - Total Income: ₹{total_income}\n
@@ -83,11 +83,11 @@ def build_simulated_cashflow_context(month_number, user_id, flag=True):
         - Average Monthly Savings: ₹{avg_savings:.2f}\n
         - Average Savings Rate: {avg_savings_rate:.1f}%\n\n
         📅 Monthly Financial Overview:\n" +
-        "\n"{table_lines} + 
-        "\n\n📈 Detected Behavioral Trends:\n1. 
-        {trend_1}\n2. 
-        {trend_2}\n\n🧠 
-        INSTRUCTION:\nAnalyze the user's behavior based on the patterns above. 
+        "\n"{table_lines} +
+        "\n\n📈 Detected Behavioral Trends:\n1.
+        {trend_1}\n2.
+        {trend_2}\n\n🧠
+        INSTRUCTION:\nAnalyze the user's behavior based on the patterns above.
         Your response should:\nR
         eflect historical progress or pitfalls.\n
         Recognize consistency and reward improvements.\n
@@ -112,18 +112,18 @@ def build_discipline_report_context(month_number, user_id, flag=True):
 
         with open(file_path, "r", encoding="utf-8") as f:
             data = json.load(f)
-            
+
         print(f"✅ Loaded discipline data for user {user_id}. month_number={month_number}, flag={flag}")
-        
+
         # Ensure month_number is int
         if isinstance(month_number, str) and month_number.isdigit():
             month_number = int(month_number)
-            
+
         # Ensure data is a list
         if not isinstance(data, list):
             print(f"⚠️ Expected list but got {type(data)}")
             return "Invalid data format in discipline report file."
-            
+
         # Filter previous or previous + current month entries
         relevant_entries = []
         for entry in data:
@@ -133,44 +133,44 @@ def build_discipline_report_context(month_number, user_id, flag=True):
             if isinstance(m, int) and ((m < month_number) or (flag and m == month_number)):
                 entry["month"] = m
                 relevant_entries.append(entry)
-                
+
         if not relevant_entries:
             return "No relevant discipline report history available for this user."
-            
+
         print(f"📦 Found {len(relevant_entries)} discipline entries for user_id={user_id}")
-        
+
         # Process entries
         summary_lines = []
         discipline_scores = []
         all_violations = []
         all_recommendations = []
-        
+
         for entry in relevant_entries:
             month = entry.get("month")
             violations = entry.get("violations", [])
             discipline_score = entry.get("discipline_score", None)
             recommendations = entry.get("recommendations", [])
-            
+
             if discipline_score is not None:
                 discipline_scores.append(discipline_score)
             all_violations.extend(violations)
             all_recommendations.extend(recommendations)
-            
+
             violation_str = "; ".join(violations) if violations else "No violations"
             rec_str = "; ".join(recommendations) if recommendations else "No recommendations"
-            
+
             summary = (
                 f"  - Month {month}: Score {discipline_score if discipline_score is not None else 'N/A'}. "
                 f"Violations: {violation_str}. Recommendations: {rec_str}"
             )
             summary_lines.append(summary)
-            
+
         # Aggregate statistics
         n = len(discipline_scores)
         avg_score = sum(discipline_scores) / n if n else 0
         most_common_violations = Counter(all_violations).most_common(3)
         most_common_recs = Counter(all_recommendations).most_common(3)
-        
+
         # Trend analysis
         if n > 1:
             score_trend = "improving" if discipline_scores[-1] > discipline_scores[0] else "declining" if discipline_scores[-1] < discipline_scores[0] else "stable"
@@ -178,38 +178,38 @@ def build_discipline_report_context(month_number, user_id, flag=True):
         else:
             score_trend = "not established yet"
             consistency = "not established yet"
-            
+
         # Final Context Prompt
         context = (
             f"You are an intelligent financial discipline coach helping a user build better financial habits.\n"
             f"Use their actual discipline journey below to deliver more personalized, empathetic, and context-aware feedback.\n\n"
-            
+
             f"📊 Summary of User's Financial Discipline (Month 1 to {month_number}):\n"
             f"- Total Months Tracked: {n}\n"
             f"- Average Discipline Score: {avg_score:.2f}/10\n"
             f"- Discipline Trend: {score_trend}\n"
             f"- Consistency: {consistency}\n"
         )
-        
+
         if most_common_violations:
             context += "- Most Common Violations:\n"
             for v, count in most_common_violations:
                 context += f"  • {v} ({count}x)\n"
-                
+
         if most_common_recs:
             context += "- Most Common Recommendations:\n"
             for r, count in most_common_recs:
                 context += f"  • {r} ({count}x)\n"
-                
+
         context += (
             f"\n📅 Monthly Discipline Breakdown:\n" +
             "\n".join(summary_lines) + "\n\n"
-            
+
             f"📈 Behavioral Analysis:\n"
             f"1. The user's discipline score is {score_trend} over time.\n"
             f"2. The user has been {consistency} in following financial rules.\n"
             f"3. The most frequent issue is {most_common_violations[0][0] if most_common_violations else 'not yet established'}.\n\n"
-            
+
             f"🧠 INSTRUCTION:\n"
             f"Analyze the user's financial discipline based on the patterns above. Your response should:\n"
             f"- Acknowledge their discipline journey and progress or challenges.\n"
@@ -217,12 +217,12 @@ def build_discipline_report_context(month_number, user_id, flag=True):
             f"- Reinforce previous recommendations that haven't been addressed.\n"
             f"- Be encouraging but firm about the importance of financial discipline.\n"
             f"- Reference specific months if relevant to show patterns.\n\n"
-            
+
             f"💡 Now, using all this context, generate a response that sounds like a supportive but firm financial coach who wants to help the user improve their financial discipline."
         )
-        
+
         return context
-        
+
     except json.JSONDecodeError as je:
         print(f"❗ JSON decode error: {je}")
         return "Error parsing discipline data: Invalid JSON format."
@@ -239,36 +239,36 @@ def build_goal_status_context(month_number, user_id, flag=True):
 
         with open(file_path, "r", encoding="utf-8") as f:
             data = json.load(f)
-            
+
         print(f"✅ Loaded goal status data for user {user_id}. month_number={month_number}, flag={flag}")
-        
+
         # Ensure month_number is int
         if isinstance(month_number, str) and month_number.isdigit():
             month_number = int(month_number)
-            
+
         # Ensure data is a list
         if not isinstance(data, list):
             print(f"⚠️ Expected list but got {type(data)}")
             return "Invalid data format in goal status file."
-            
+
         # Filter previous or previous + current month entries
         relevant_entries = []
         for entry in data:
             if not isinstance(entry, dict) or "month" not in entry or "goals" not in entry:
                 continue
-                
+
             m = entry.get("month")
             if isinstance(m, str) and m.isdigit():
                 m = int(m)
             if isinstance(m, int) and ((m < month_number) or (flag and m == month_number)):
                 entry["month"] = m
                 relevant_entries.append(entry)
-                
+
         if not relevant_entries:
             return "No relevant goal status history available for this user."
-            
+
         print(f"📦 Found {len(relevant_entries)} goal status entries for user_id={user_id}")
-        
+
         # Process entries
         summary_lines = []
         goal_status_counter = Counter()
@@ -276,32 +276,56 @@ def build_goal_status_context(month_number, user_id, flag=True):
         total_saved = 0
         total_expected = 0
         goal_progress = {}  # Track progress of each goal over time
-        
+
         for entry in relevant_entries:
             month = entry.get("month")
-            goal_details = entry.get("goals", [])
-            
+            goals_data = entry.get("goals", [])
+
+            # Handle both formats: list of goals or dictionary of goals
+            if isinstance(goals_data, dict):
+                # Convert dictionary format to list format for processing
+                goals_list = []
+                for goal_name, goal_info in goals_data.items():
+                    # Create a goal object in the expected format
+                    goal_obj = {
+                        "name": goal_name,
+                        "status": goal_info.get("status", "N/A"),
+                        "saved_so_far": goal_info.get("progress", 0),  # Use progress as saved_so_far
+                        "expected_by_now": goal_info.get("target", 0) * 0.8,  # Estimate expected as 80% of target
+                        "target_amount": goal_info.get("target", 0),
+                        "adjustment_suggestion": goal_info.get("adjustment", "N/A")
+                    }
+                    goals_list.append(goal_obj)
+                goal_details = goals_list
+            else:
+                # Already in list format
+                goal_details = goals_data
+
             for goal in goal_details:
+                # Skip if not a dictionary
+                if not isinstance(goal, dict):
+                    continue
+
                 name = goal.get("name", "N/A")
                 status = goal.get("status", "N/A")
                 saved_so_far = goal.get("saved_so_far", 0)
                 expected_by_now = goal.get("expected_by_now", 0)
                 target_amount = goal.get("target_amount", 0)
-                adjustment_suggestion = goal.get("adjustment_suggestion", "N/A")
-                
+                adjustment_suggestion = goal.get("adjustment_suggestion", goal.get("adjustment", "N/A"))
+
                 # Convert to numeric if needed
                 saved_so_far = float(saved_so_far) if isinstance(saved_so_far, (int, float, str)) and str(saved_so_far).replace('.', '', 1).isdigit() else 0
                 expected_by_now = float(expected_by_now) if isinstance(expected_by_now, (int, float, str)) and str(expected_by_now).replace('.', '', 1).isdigit() else 0
                 target_amount = float(target_amount) if isinstance(target_amount, (int, float, str)) and str(target_amount).replace('.', '', 1).isdigit() else 0
-                
+
                 # Update totals
                 total_saved += saved_so_far
                 total_expected += expected_by_now
                 goal_status_counter[status] += 1
-                
+
                 if adjustment_suggestion and adjustment_suggestion != "N/A":
                     all_adjustments.append(adjustment_suggestion)
-                
+
                 # Track goal progress over time
                 if name not in goal_progress:
                     goal_progress[name] = []
@@ -312,11 +336,11 @@ def build_goal_status_context(month_number, user_id, flag=True):
                     "target": target_amount,
                     "status": status
                 })
-                
+
                 # Format progress percentage
                 progress_pct = (saved_so_far / target_amount * 100) if target_amount > 0 else 0
                 expected_pct = (expected_by_now / target_amount * 100) if target_amount > 0 else 0
-                
+
                 summary = (
                     f"  - Month {month}: Goal '{name}', Status: {status}, "
                     f"Saved: ₹{saved_so_far:.2f} ({progress_pct:.1f}%), "
@@ -324,14 +348,14 @@ def build_goal_status_context(month_number, user_id, flag=True):
                     f"Suggestion: {adjustment_suggestion}"
                 )
                 summary_lines.append(summary)
-        
+
         # Analyze goal trends
         goal_trends = []
         for name, progress in goal_progress.items():
             if len(progress) > 1:
                 first_status = progress[0]["status"]
                 last_status = progress[-1]["status"]
-                
+
                 # Calculate trend
                 if first_status == last_status:
                     trend = f"Goal '{name}' has remained {last_status}"
@@ -339,7 +363,7 @@ def build_goal_status_context(month_number, user_id, flag=True):
                     trend = f"Goal '{name}' has improved from {first_status} to {last_status}"
                 else:
                     trend = f"Goal '{name}' has declined from {first_status} to {last_status}"
-                
+
                 # Calculate savings rate
                 if len(progress) > 1:
                     first_saved = progress[0]["saved"]
@@ -348,54 +372,54 @@ def build_goal_status_context(month_number, user_id, flag=True):
                     if months_diff > 0:
                         monthly_save_rate = (last_saved - first_saved) / months_diff
                         trend += f", saving ₹{monthly_save_rate:.2f}/month"
-                
+
                 goal_trends.append(trend)
-        
+
         # Most common adjustment suggestions
         common_adjustments = [adj for adj, count in Counter(all_adjustments).most_common(3) if adj != "N/A"]
-        
+
         # Calculate overall progress metrics
         progress_ratio = (total_saved / total_expected * 100) if total_expected > 0 else 0
         progress_status = "ahead of schedule" if progress_ratio > 105 else "on track" if progress_ratio >= 95 else "slightly behind" if progress_ratio >= 80 else "significantly behind"
-        
+
         # Final Context Prompt
         context = (
             f"You are an intelligent financial goals coach helping a user achieve their financial objectives.\n"
             f"Use their actual goal progress below to deliver more personalized, empathetic, and context-aware feedback.\n\n"
-            
+
             f"📊 Summary of User's Financial Goals (Month 1 to {month_number}):\n"
             f"- Months Tracked: {len(relevant_entries)}\n"
             f"- Total Saved Across All Goals: ₹{total_saved:.2f}\n"
             f"- Total Expected By Now: ₹{total_expected:.2f}\n"
             f"- Overall Progress: {progress_ratio:.1f}% ({progress_status})\n"
         )
-        
+
         # Add status counts
         for status, count in goal_status_counter.items():
             context += f"- Goals with status '{status}': {count}\n"
-        
+
         # Add common adjustments
         if common_adjustments:
             context += "- Most Common Suggestions:\n"
             for adj in common_adjustments:
                 context += f"  • {adj}\n"
-        
+
         # Add goal trends
         if goal_trends:
             context += "\n📈 Goal Trends:\n"
             for trend in goal_trends:
                 context += f"- {trend}\n"
-        
+
         # Add monthly breakdown
         context += (
             f"\n📅 Monthly Goal Breakdown:\n" +
             "\n".join(summary_lines) + "\n\n"
-            
+
             f"📈 Behavioral Analysis:\n"
             f"1. The user is {progress_status} on their overall financial goals.\n"
             f"2. The most common goal status is '{goal_status_counter.most_common(1)[0][0]}' ({goal_status_counter.most_common(1)[0][1]} goals).\n"
             f"3. {goal_trends[0] if goal_trends else 'Goal trend analysis not available yet.'}.\n\n"
-            
+
             f"🧠 INSTRUCTION:\n"
             f"Analyze the user's financial goals based on the patterns above. Your response should:\n"
             f"- Acknowledge their progress journey and celebrate wins or address challenges.\n"
@@ -403,12 +427,12 @@ def build_goal_status_context(month_number, user_id, flag=True):
             f"- Offer strategies to improve goals that are behind schedule.\n"
             f"- Be encouraging about goals that are on track or ahead.\n"
             f"- Reference specific goals by name to personalize your advice.\n\n"
-            
+
             f"💡 Now, using all this context, generate a response that sounds like a supportive financial goals coach who wants to help the user achieve their financial objectives."
         )
-        
+
         return context
-        
+
     except json.JSONDecodeError as je:
         print(f"❗ JSON decode error: {je}")
         return "Error parsing goal status data: Invalid JSON format."
@@ -469,7 +493,7 @@ def build_financial_strategy_context(month_number, user_id):
     except Exception as e:
         print(f"⛔ Error building financial strategy context: {e}")
         return f"Error building financial strategy context: {e}"
-    
+
 def build_karmic_tracker_context(month_number, user_id):
     file_path = f"output/{user_id}_karmic_tracker_simulation.json"
     try:
@@ -541,8 +565,8 @@ def build_karmic_tracker_context(month_number, user_id):
     except Exception as e:
         print(f"❗ Error building karmic tracker context: {e}")
         return f"Error building karmic tracker context: {e}"
-    
-    
+
+
 def build_behavior_tracker_context(month_number, user_id):
     file_path = f"output/{user_id}_behavior_tracker_simulation.json"
     try:

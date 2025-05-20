@@ -1,0 +1,91 @@
+[
+    {
+        "user_name": "John Doe",
+        "monthly_income": 5000,
+        "expenses": {
+            "housing": 1500,
+            "food": 800,
+            "transportation": 500,
+            "entertainment": 200,
+            "savings": 0
+        },
+        "total_expenses": 3500,
+        "financial_goal": "long_term_investment",
+        "financial_type": "conservative",
+        "risk_level": "low",
+        "market_context": "stable",
+        "inflation": 2,
+        "interest_rate": 4,
+        "cost_of_living_index": 120,
+        "notes": "Consider increasing income or reducing expenses to reach financial goal.",
+        "savings": 1500,
+        "economic_context": "stable",
+        "balance": 1500,
+        "month": 1
+    },
+    {
+        "simulation_result": {
+            "user_name": "John Doe",
+            "monthly_income": 5000,
+            "expenses": {
+                "housing": 1500,
+                "food": 800,
+                "transportation": 500,
+                "entertainment": 200,
+                "savings": 600,
+                "miscellaneous": 100
+            },
+            "total_expenses": 4200,
+            "financial_goal": "long_term_investment",
+            "financial_type": "conservative",
+            "risk_level": "low",
+            "market_context": "stable",
+            "inflation": 2,
+            "interest_rate": 4,
+            "cost_of_living_index": 120
+        },
+        "notes": "We've noticed an increase in miscellaneous expenses. Consider categorizing and tracking these expenses to identify areas for reduction. Based on your conservative financial type and low risk level, we recommend allocating a higher percentage of your income towards savings and investments. Consider exploring low-risk investment options to achieve your long-term financial goals.",
+        "savings_recommendation": 22,
+        "investment_recommendation": 12,
+        "balance": 800,
+        "month": 2
+    },
+    {
+        "simulation_result": {
+            "user_name": "John Doe",
+            "monthly_income": 5200,
+            "expenses": {
+                "housing": 1500,
+                "food": 800,
+                "transportation": 500,
+                "entertainment": 200,
+                "savings": 500,
+                "miscellaneous": 0
+            },
+            "total_expenses": 4500,
+            "notes": "Increase income by 2% from last month. Reduce entertainment expenses by 20% from last month. Increase savings by 25% from last month.",
+            "savings_rate": 0.096,
+            "financial_goal_progress": 0.05
+        },
+        "month": 4
+    },
+    {
+        "simulation_result": {
+            "user_name": "John Doe",
+            "monthly_income": 5324,
+            "expenses": {
+                "housing": 1500,
+                "food": 800,
+                "transportation": 720,
+                "entertainment": 400,
+                "savings": 1250,
+                "miscellaneous": 0
+            },
+            "total_expenses": 4570,
+            "notes": "Continue to reduce entertainment expenses and allocate more funds towards savings. Consider exploring ways to reduce transportation expenses by 10%.",
+            "savings_rate": 0.235,
+            "financial_goal_progress": 0.06
+        },
+        "month": 5
+    }
+]

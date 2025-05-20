@@ -1,0 +1,156 @@
+[
+    {
+        "financial_discipline_score": 0.7,
+        "improvement_areas": [
+            "Reduce unnecessary expenses",
+            "Increase savings rate"
+        ],
+        "cashflow_analysis": {
+            "income": 5000,
+            "expenses": 3500,
+            "savings_rate": 0.3,
+            "debt": 1000
+        },
+        "recommendations": [
+            "Set aside 10% of income for emergency fund",
+            "Consider debt consolidation options"
+        ],
+        "month": 1
+    },
+    {
+        "financial_discipline_score": 0.82,
+        "improvement_areas": [
+            "reduce dining out expenses",
+            "increase savings rate"
+        ],
+        "violations": [
+            "high credit card balance"
+        ],
+        "recommended_actions": [
+            "create a budget for discretionary spending",
+            "consider debt consolidation options",
+            "review budget",
+            "set financial goals"
+        ],
+        "historical_trend": "improving",
+        "month": 2,
+        "acknowledged_improvements": [
+            "reduced dining out expenses",
+            "increased savings rate"
+        ],
+        "historical_data": {
+            "average_score": 0.73,
+            "improvement_trend": "up"
+        }
+    },
+    {
+        "financial_discipline_score": 0.88,
+        "improvement_areas": [
+            "maintain reduced dining out expenses",
+            "continue increasing savings rate",
+            "reduce unnecessary debt"
+        ],
+        "violations": [
+            "high credit card balance"
+        ],
+        "recommended_actions": [
+            "review budget and adjust for discretionary spending",
+            "consider debt consolidation options and set a target payoff date",
+            "avoid impulse purchases"
+        ],
+        "historical_trend": "improving",
+        "month": 3,
+        "acknowledged_improvements": [
+            "reduced dining out expenses",
+            "increased savings rate"
+        ],
+        "historical_data": {
+            "average_score": 0.81,
+            "improvement_trend": "up"
+        }
+    },
+    {
+        "financial_discipline_score": 0.92,
+        "improvement_areas": [
+            "maintain current savings rate",
+            "reduce unnecessary debt"
+        ],
+        "violations": [
+            "high credit card balance"
+        ],
+        "recommended_actions": [
+            "review budget and adjust for discretionary spending",
+            "consider debt consolidation options and set a target payoff date",
+            "avoid impulse purchases",
+            "increase emergency fund"
+        ],
+        "historical_trend": "improving",
+        "month": 4,
+        "acknowledged_improvements": [
+            "reduced dining out expenses",
+            "increased savings rate",
+            "maintained current savings rate"
+        ],
+        "historical_data": {
+            "average_score": 0.85,
+            "improvement_trend": "up"
+        },
+        "progress_recognition": {
+            "improvement_in": "reducing unnecessary debt",
+            "consistent_improvement_in": "increasing savings rate",
+            "repeated_violation_in": "impulse purchases"
+        }
+    },
+    {
+        "financial_discipline_score": 0.95,
+        "improvement_areas": [
+            "maintain current savings rate",
+            "reduce impulse purchases"
+        ],
+        "violations": [
+            "high credit card balance"
+        ],
+        "recommended_actions": [
+            "review expense categories",
+            "increase emergency fund",
+            "create debt repayment plan",
+            "avoid impulse purchases"
+        ],
+        "historical_trend": "improving",
+        "month": 5,
+        "acknowledged_improvements": [
+            "reduced dining out expenses",
+            "increased savings rate",
+            "maintained current savings rate",
+            "reduced impulse purchases"
+        ],
+        "historical_data": {
+            "average_score": 0.87,
+            "improvement_trend": "up"
+        },
+        "progress_recognition": {
+            "improvement_in": "reducing unnecessary debt",
+            "consistent_improvement_in": "increasing savings rate",
+            "repeated_violation_in": "impulse purchases"
+        }
+    },
+    {
+        "financial_discipline_score": 0.92,
+        "improvement_areas": [
+            "maintain current savings rate",
+            "reduce impulse purchases",
+            "review expense categories"
+        ],
+        "violations": [
+            "high credit card balance"
+        ],
+        "recommended_actions": [
+            "review expense categories",
+            "increase emergency fund",
+            "create debt repayment plan",
+            "avoid impulse purchases",
+            "set budget for discretionary spending\n  ],\n  "
+        ],
+        "month": 6
+    }
+]

@@ -1,0 +1,61 @@
+# Core LangChain and LangGraph dependencies
+langchain>=0.1.12
+langchain-core>=0.1.32
+langchain-groq>=0.1.5
+langchain-openai>=0.1.5
+langchain-community>=0.0.29
+langchain-experimental>=0.0.52
+langchain-text-splitters>=0.0.1
+langchain-chroma>=0.0.1
+langchain-anthropic>=0.1.4
+langserve>=0.0.41
+langsmith>=0.1.23
+langgraph>=0.0.30
+
+# Web frameworks
+streamlit>=1.14.0
+fastapi>=0.110.0
+uvicorn>=0.27.1
+pydantic>=2.6.3
+starlette>=0.40.0
+anyio>=3.6.2
+typing-extensions>=4.8.0
+h11>=0.8.0
+
+# API and HTTP
+requests>=2.28.2
+httpx>=0.27.0
+
+# Data processing
+pandas>=1.5.3
+numpy>=1.24.0
+yfinance>=0.1.74
+quandl>=3.7.0
+statsmodels>=0.13.2
+plotly>=5.18.0
+
+# Financial data
+wbgapi>=1.0.10
+
+# Database
+pymongo>=4.6.0
+motor>=3.3.0
+
+# Utilities
+python-dotenv>=0.21.1
+pyyaml>=6.0.1
+agentops>=0.0.26
+litellm>=1.60.2
+uuid>=1.30
+
+# LLM providers
+openai>=0.27.0
+groq>=0.4.0
+
+# Additional dependencies
+annotated-types>=0.6.0
+pydantic-core>=2.10.0
+typing-inspection>=0.4.0
+sniffio>=1.1.0
+idna>=2.8
+click>=7.0

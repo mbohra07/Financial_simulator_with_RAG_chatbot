@@ -1,0 +1,282 @@
+[
+  {
+    "month": 1,
+    "user_name": "John Doe",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": true
+  },
+  {
+    "month": 2,
+    "user_name": "John Doe",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 3,
+    "user_name": "John Doe",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 1,
+    "user_name": "Test User",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 2,
+    "user_name": "Test User",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 1,
+    "user_name": "string",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 2,
+    "user_name": "string",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 1,
+    "user_name": "API Test User",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 2,
+    "user_name": "API Test User",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 1,
+    "user_name": "string",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 2,
+    "user_name": "string",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 1,
+    "user_name": "string",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 2,
+    "user_name": "string",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 1,
+    "user_name": "John Doe",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 2,
+    "user_name": "John Doe",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 3,
+    "user_name": "John Doe",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 4,
+    "user_name": "John Doe",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 5,
+    "user_name": "John Doe",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 6,
+    "user_name": "John Doe",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 1,
+    "user_name": "John Doe",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 1,
+    "user_name": "string",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 2,
+    "user_name": "string",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 3,
+    "user_name": "string",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 4,
+    "user_name": "string",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 5,
+    "user_name": "string",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 6,
+    "user_name": "string",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 1,
+    "user_name": "string",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 1,
+    "user_name": "string",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 2,
+    "user_name": "string",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 1,
+    "user_name": "string",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 2,
+    "user_name": "string",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 3,
+    "user_name": "string",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 4,
+    "user_name": "string",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 5,
+    "user_name": "string",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  },
+  {
+    "month": 6,
+    "user_name": "string",
+    "persona_title": "Reckless Drifter",
+    "avg_karmic_score": 50,
+    "behavior_pattern": "Inconsistent Behavior",
+    "change_flag": false
+  }
+]
