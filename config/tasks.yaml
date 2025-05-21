@@ -6,45 +6,67 @@ simulate_cashflow_task:
     Respond ONLY with valid JSON.
     <</SYS>>
 
-    The user profile for this simulation is as follows:
-      - Name: {user name}
-      - Monthly Income: {income}
-      - Expenses (list): {expenses}
-      - Total Expenses: {total_expenses}
-      - Financial Goal: {goal}
-      - Financial Type: {financial_type}
-      - Risk Level: {risk_level}
-      - market_context: {market_context}
-      - inflation : {inflation}
-      - interest_rate : {interest_rate}
-      - cost_of_living_index : {cost_of_living_index}
+    You must use the exact values from the user inputs provided below. Do not make up or hallucinate any values.
 
-    Simulate the user’s income and expenses for the month based on this profile, their goals, financial type, risk level, and current balance. 
-    Use the provided breakdown of expenses and income to populate the output fields. 
+    The user inputs contain the following information:
+    - user_id: The unique identifier for the user
+    - user_name: The user's actual name (use this exactly as provided)
+    - income: The user's monthly income
+    - expenses: A list of the user's expenses with name and amount
+    - total_expenses: The sum of all expenses
+    - goal: The user's financial goal
+    - financial_type: The user's financial personality type
+    - risk_level: The user's risk tolerance level
+
+    Simulate the user’s income and expenses for the month based on this profile, their goals, financial type, risk level, and current balance.
+    Use the provided breakdown of expenses and income to populate the output fields.
     If any income or expense category is missing, treat it as zero. Tailor notes and savings based on the user’s goal, risk level, and financial type.
 
+    IMPORTANT: Always include the user's actual name in the output as provided in the user_name field. Never use placeholder names like "John Doe".
+
   expected_output: |
-    [
-      {
-        "month": number,
-        "income": {
-          "salary": ,
-          "freelance": ,
-          "total": 
+    {
+      "month": number,
+      "user_name": "string",
+      "income": {
+        "salary": number,
+        "investments": number,
+        "other": number,
+        "total": number
+      },
+      "expenses": {
+        "housing": number,
+        "utilities": number,
+        "groceries": number,
+        "transportation": number,
+        "healthcare": number,
+        "entertainment": number,
+        "dining_out": number,
+        "subscriptions": number,
+        "other": number,
+        "total": number
+      },
+      "savings": {
+        "amount": number,
+        "percentage_of_income": number,
+        "target_met": boolean
+      },
+      "balance": {
+        "starting": number,
+        "ending": number,
+        "change": number
+      },
+      "analysis": {
+        "spending_categories": {
+          "essential": number,
+          "non_essential": number,
+          "ratio": number
         },
-        "expenses": {
-          "needs": ,
-          "wants": ,
-          "luxury": ,
-          "emergency": ,
-          "total": 
-        },
-        "savings": ,
-        "debt_taken": ,
-        "debt_repaid": ,
-        "notes": 
-      }
-    ]
+        "savings_rate": "string",
+        "cash_flow": "string"
+      },
+      "notes": "string"
+    }
   agent: emotional_bias_agent
   output_file: output/simulated_cashflow.json
   retry_policy:
@@ -67,7 +89,7 @@ discipline_tracker_task:
         "rules_checked": {
           "expenses_within_income": ,
           "minimum_savings_met": ,
-          "unnecessary_debt_taken": 
+          "unnecessary_debt_taken":
         },
         "violations": [],
         "discipline_score": , // out of 10
@@ -103,14 +125,14 @@ track_goals:
             "expected_by_now": ,
             "status": ,
             "priority": number,
-            "adjustment_suggestion": 
+            "adjustment_suggestion":
           }
         ],
         "summary": {
           "on_track_goals": ,
           "behind_goals": ,
           "total_saved": ,
-          "total_required_by_now": 
+          "total_required_by_now":
         }
       }
     ]
@@ -128,7 +150,7 @@ behavior_tracker_task:
     Respond ONLY with valid JSON.
     <</SYS>>
 
-    Analyze the user's financial history and trends in the above context. 
+    Analyze the user's financial history and trends in the above context.
     Based on their savings, spending, and goal adherence, assign:
     - "spending_pattern": "saver", "spender", or "inconsistent"
     - "goal_adherence": "on-track" or "off-track"
@@ -163,7 +185,7 @@ karma_tracker_task:
     NEVER include prep statements like "Now I can answer", "Here's the result", or reasoning.
     Respond ONLY with valid JSON.
     <</SYS>>
-    
+
     Analyze the user's financial and behavioral history above.
     - Assign **sattvic_traits** for prudent, ethical, goal-oriented, and disciplined financial behaviors (e.g., regular saving, conservative investments, clear goal adherence, low debt, mindful spending).
     - Assign **rajasic_traits** for ambition, risk-taking, high spending on wants/luxuries, or aggressive investments (e.g., frequent trading, high expense on luxury or non-essentials, chasing returns).
@@ -172,7 +194,7 @@ karma_tracker_task:
     - Assign a **trend**: "Improving", "Declining", or "Neutral" based on changes in karma_score and trait balance compared to previous months.
 
     Output for the current month only, reflecting the actual trends and context above.
-    
+
   expected_output: >
     [
       {
@@ -181,11 +203,11 @@ karma_tracker_task:
           "sattvic_traits": [],
           "rajasic_traits": [],
           "tamasic_traits": [],
-          "karma_score": number,   
-          "trend": 
+          "karma_score": number,
+          "trend":
         }
     ]
-  
+
   agent: karma_tracker_agent
   output_file: output/karmic_tracker.json
   frequency: monthly
@@ -200,17 +222,17 @@ financial_strategy_task:
     NEVER include prep statements like "Now I can answer", "Here's the result", or reasoning.
     Respond ONLY with valid JSON or else i will terminate you.
     <</SYS>>
-        
+
     Carefully analyze the user's financial history, spending, savings, market conditions, and goal progress above.
     For the **current month**:
-    - Suggest **adaptive, specific recommendations** to improve financial health and help the user reach their goals. 
+    - Suggest **adaptive, specific recommendations** to improve financial health and help the user reach their goals.
     - Recommendations should be based on actual trends and issues (e.g., overspending, missed savings, high risk, market volatility, changes in income, etc).
     - If the user is on track, suggest ways to optimize further (e.g., diversify investments, increase savings rate, rebalance allocations).
     - If the user is behind, suggest corrective actions (e.g., cut specific expenses, adjust savings targets, reduce risk, build emergency fund).
     - **Reasoning** should briefly explain why these recommendations are appropriate for this month, referencing the user's context.
 
     Output for the current month only, reflecting the actual trends and context above.
-    
+
   expected_output: |
     [
       {
@@ -228,7 +250,7 @@ financial_strategy_task:
     - Limit recommendations to at most two items.
   agent: financial_strategy_agent
   output_file: output/financial_strategy.json
-  retry_policy: 
+  retry_policy:
     max_retries: 3
     retry_interval: 45s
-    
+

@@ -309,7 +309,7 @@ with st.expander("Run New Simulation", expanded=True):
         st.subheader("Personal Information")
         col1, col2 = st.columns(2)
         with col1:
-            user_name = st.text_input("Your Name", "John Doe")
+            user_name = st.text_input("Your Name")
             age = st.number_input("Age", min_value=18, max_value=100, value=30)
             occupation = st.text_input("Occupation", "Software Engineer")
         with col2:

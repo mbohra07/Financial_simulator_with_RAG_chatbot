@@ -1,0 +1,162 @@
+I'll create a comprehensive prompt for your frontend developer to ensure they can properly integrate with your updated financial simulation API. This will help ensure a seamless collaboration.
+Frontend Integration Guide for Financial Simulation API
+Overview
+We've made significant updates to the financial simulation backend to ensure it accurately uses the exact user inputs and produces consistent JSON output. This guide will help you integrate your frontend with the updated API.
+API Endpoints
+The main endpoints for the financial simulation remain the same:
+Start Simulation (Async): /start-simulation (POST)
+Check Simulation Status: /simulation-status/{task_id} (GET)
+Get Simulation Results: /simulation-results/{task_id} (GET)
+Direct Simulation (Sync): /simulate (POST)
+Get All Results for User: /get-simulation-result/{user_id} (GET)
+
+Input Format
+The input format remains consistent with the previous version:
+{
+  "user_id": "unique-user-identifier",
+  "user_name": "User's Full Name",
+  "income": 50000,
+  "expenses": [
+    { "name": "Rent", "amount": 15000 },
+    { "name": "Groceries", "amount": 5000 },
+    { "name": "Utilities", "amount": 3000 },
+    { "name": "Transportation", "amount": 2000 }
+  ],
+  "total_expenses": 25000,
+  "goal": "Save for a house down payment",
+  "financial_type": "moderate",
+  "risk_level": "medium"
+}
+
+Important Notes:
+The user_name field must contain the user's actual name (not a placeholder)
+The expenses array should contain detailed expense categories
+The financial_type can be "conservative", "moderate", or "aggressive"
+The risk_level can be "low", "medium", or "high"
+
+Output Format
+The output format has been standardized to ensure consistency. Here's the structure of the simulated_cashflow section:
+{
+  "month": 1,
+  "user_name": "User's Full Name",
+  "income": {
+    "salary": 50000,
+    "investments": 0,
+    "other": 0,
+    "total": 50000
+  },
+  "expenses": {
+    "housing": 15000,
+    "utilities": 3000,
+    "groceries": 5000,
+    "transportation": 2000,
+    "healthcare": 0,
+    "entertainment": 0,
+    "dining_out": 0,
+    "subscriptions": 0,
+    "other": 0,
+    "total": 25000
+  },
+  "savings": {
+    "amount": 25000,
+    "percentage_of_income": 50,
+    "target_met": true
+  },
+  "balance": {
+    "starting": 0,
+    "ending": 25000,
+    "change": 25000
+  },
+  "analysis": {
+    "spending_categories": {
+      "essential": 25000,
+      "non_essential": 0,
+      "ratio": 1.0
+    },
+    "savings_rate": "Excellent",
+    "cash_flow": "Positive"
+  },
+  "notes": "Based on your moderate financial type and medium risk level, consider a balanced approach between savings and moderate investments. To achieve your goal of 'Save for a house down payment', continue saving at least 25000 per month."
+}
+
+Key Changes to Note:
+The user_name will always match exactly what was provided in the input
+The income.salary will always match exactly what was provided in the input
+The expense categories will be mapped from the input expenses
+All numerical values are calculated based on the actual user inputs
+The notes field contains personalized recommendations based on the user's financial type, risk level, and goal
+
+Integration Steps
+Update Your Input Form:
+Ensure all required fields are collected from the user
+Validate that expense categories are properly formatted
+Make sure total_expenses matches the sum of all expense amounts
+Update Your Results Display:
+Create visualizations for income vs. expenses
+Show savings rate and progress toward goals
+Display the essential vs. non-essential spending ratio
+Highlight the personalized notes and recommendations
+Handle Multi-Month Simulations:
+The API returns data for multiple months (typically 6)
+Create a timeline or progress view to show changes over time
+Allow users to navigate between different months
+Error Handling:
+Check for the "status" field in API responses
+Display appropriate error messages if the simulation fails
+Implement retry logic for temporary failures
+
+Example API Calls
+Starting a Simulation
+const startSimulation = async (userData) => {
+  try {
+    const response = await fetch('/start-simulation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData)
+    });
+    
+    const data = await response.json();
+    return data.task_id; // Store this to check status later
+  } catch (error) {
+    console.error('Error starting simulation:', error);
+  }
+};
+
+Checking Simulation Status
+
+const checkSimulationStatus = async (taskId) => {
+  try {
+    const response = await fetch(`/simulation-status/${taskId}`);
+    const data = await response.json();
+    return data.task_status; // "queued", "running", "completed", or "failed"
+  } catch (error) {
+    console.error('Error checking simulation status:', error);
+  }
+};
+
+Getting Simulation Results
+const getSimulationResults = async (taskId) => {
+  try {
+    const response = await fetch(`/simulation-results/${taskId}`);
+    const data = await response.json();
+    
+    if (data.status === "success") {
+      return data.data; // Contains all simulation results
+    } else {
+      console.error('Error in simulation:', data.message);
+    }
+  } catch (error) {
+    console.error('Error getting simulation results:', error);
+  }
+};
+
+Testing
+Before deploying to production, please test the integration with these scenarios:
+Basic Simulation: Test with standard inputs
+Edge Cases: Test with very high or low income/expenses
+Error Handling: Test with invalid inputs to ensure proper error handling
+Multi-Month View: Test navigation between different months
+Data Visualization: Test all charts and graphs with the updated data format
+
+Contact
+If you encounter any issues or have questions about the API integration, please contact the backend team immediately.

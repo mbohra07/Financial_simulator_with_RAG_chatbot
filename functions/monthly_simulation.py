@@ -1,4 +1,4 @@
-import os 
+import os
 import json
 
 def deduplicate_and_save(path, parsed_result):
@@ -114,8 +114,9 @@ def generate_monthly_reflection_report(user_name, month):
         "summary_message": summary_message
     }
 
-    # Save report
+    # Save report with user_id prefix
 
+    # Save to the combined reflection file
     save_monthly_path = os.path.join(data_dir, "reflection_month.json")
 
     # Check if file exists
@@ -139,9 +140,14 @@ def generate_monthly_reflection_report(user_name, month):
     with open(save_monthly_path, "w", encoding="utf-8") as f:
         json.dump(existing_data, f, indent=2, ensure_ascii=False)
 
-    save_path = os.path.join(monthly_ouput_dir, f"reflection_month_{month}.json")
+    # Create monthly_output directory if it doesn't exist
+    os.makedirs(monthly_ouput_dir, exist_ok=True)
+
+    # Save individual reflection file with user_id prefix only
+    save_path = os.path.join(monthly_ouput_dir, f"{user_name}_reflection_month_{month}.json")
     with open(save_path, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, ensure_ascii=False)
+    print(f"💾 Monthly reflection saved with user_id prefix: {save_path}")
     print(f"✅ Reflection report saved: {save_path}")
     return report
 
@@ -174,7 +180,11 @@ def assign_persona(user_name, month):
     }
 
     history_data.append(record)
-    save_json('data/persona_history.json', history_data)
+
+    # Save with user_id prefix only - use person_history for consistency with API
+    persona_history_path = f'data/{user_name}_person_history.json'
+    save_json(persona_history_path, history_data)
+    print(f"💾 Persona history saved with user_id prefix: {persona_history_path}")
 
     print(f"🔮 Persona Assigned for Month {month}: {persona_title} (Change: {change_flag})")
     return record

@@ -19,6 +19,9 @@ from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI
 from langchain.globals import set_debug
 
+# Import custom JSON parsing utilities
+from utils.json_fix import safe_parse_json, create_fallback_json
+
 import langgraph.graph as lg
 from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode
@@ -27,13 +30,13 @@ from dotenv import load_dotenv
 from functions.economic_context import EconomicEnvironment, simulate_monthly_market
 from functions.monthly_simulation import deduplicate_and_save, assign_persona, generate_monthly_reflection_report
 from functions.task_functions import (
-    build_simulated_cashflow_context,
     build_discipline_report_context,
     build_goal_status_context,
     build_behavior_tracker_context,
     build_karmic_tracker_context,
     build_financial_strategy_context
 )
+from functions.task_functions_fixed import build_simulated_cashflow_context
 
 # Import MongoDB client
 from database.mongodb_client import (
@@ -121,6 +124,7 @@ def simulate_cashflow_node(state: FinancialSimulationState) -> FinancialSimulati
 
     # Get previous month data if available
     user_id = state["user_inputs"].get("user_id", "default_user")
+    user_name = state["user_inputs"].get("user_name", "Default User")
     month = state["month_number"]
     previous_month_context = ""
 
@@ -144,9 +148,19 @@ IMPORTANT LEARNING INSTRUCTIONS:
     prompt = ChatPromptTemplate.from_messages([
         SystemMessage(content="""You are a financial cashflow simulation assistant. Always respond ONLY with valid JSON.
 
-As you analyze this month's data, explicitly consider how it compares to previous months.
-Show progressive learning by adapting recommendations based on what worked or didn't work before.
-Your simulation should demonstrate continuity and improvement over time.
+IMPORTANT INSTRUCTIONS:
+1. Use the EXACT user_name from the user inputs - never use placeholder names like "John Doe"
+2. Use the EXACT income value from the user inputs - do not make up or modify this value
+3. Use the EXACT expense categories and amounts from the user inputs - do not make up or modify these values
+4. Follow the exact output format specified in the task description
+5. Make sure all values are relevant to the user's actual inputs
+6. As you analyze this month's data, explicitly consider how it compares to previous months
+7. Show progressive learning by adapting recommendations based on what worked or didn't work before
+8. Your simulation should demonstrate continuity and improvement over time
+9. Ensure all numerical values are appropriate and realistic based on the user's income and expenses
+10. The user's financial goal, financial type, and risk level should influence your analysis and recommendations
+11. NEVER use default values like "John Doe" or income of 5000 - use ONLY the values provided in user_inputs
+12. If user_inputs contains placeholder values like "string" or 0, use those exact values - do not substitute defaults
 """),
         HumanMessage(content=task_description +
                     "\n\nUser Inputs: {user_inputs}\nEconomic Context: {economic_context}\nMarket Context: {market_context}" +
@@ -161,23 +175,363 @@ Your simulation should demonstrate continuity and improvement over time.
 
     # Execute chain
     try:
-        result = chain.invoke({
-            "user_inputs": state["user_inputs"],
-            "economic_context": state["economic_context"],
-            "market_context": state["market_context"]
-        })
+        # Get user name for the result
+        user_name = state["user_inputs"].get("user_name", "Default User")
+
+        # Try to get the result from the chain
+        try:
+            raw_result = chain.invoke({
+                "user_inputs": state["user_inputs"],
+                "economic_context": state["economic_context"],
+                "market_context": state["market_context"]
+            })
+            result = raw_result  # If successful, use the result directly
+
+            # Ensure user_name is in the result
+            if isinstance(result, dict):
+                result["user_name"] = user_name
+
+        except Exception as e:
+            # If the chain fails, try to extract the raw output and parse it manually
+            print(f"⚠️ Warning: JSON parsing failed in simulate_cashflow_node: {e}")
+
+            # Get the raw output from the error message if possible
+            error_str = str(e)
+            if "Invalid json output:" in error_str:
+                raw_json_str = error_str.split("Invalid json output:", 1)[1].strip()
+                # Try to parse the raw JSON with our custom parser
+                parsed_result = safe_parse_json(raw_json_str)
+                if parsed_result:
+                    print(f"✅ Successfully recovered JSON in simulate_cashflow_node using custom parser")
+                    result = parsed_result
+
+                    # Ensure user_name is in the result
+                    if isinstance(result, dict):
+                        result["user_name"] = user_name
+                else:
+                    # If parsing still fails, create a fallback JSON
+                    print(f"⚠️ Could not parse JSON in simulate_cashflow_node, using fallback")
+                    result = create_fallback_json(month, "cashflow", state["user_inputs"])
+            else:
+                # If we can't extract the raw JSON, create a fallback
+                result = create_fallback_json(month, "cashflow", state["user_inputs"])
 
         # Save result to file
         output_path = f"output/{user_id}_simulated_cashflow_simulation.json"
 
-        # Ensure it's a list with the month number
+        # Get user inputs
+        user_name = state["user_inputs"].get("user_name", "Default User")
+        user_income = state["user_inputs"].get("income", 5000)
+        user_expenses = state["user_inputs"].get("expenses", [])
+
+        # Standardize the result format
         if isinstance(result, dict):
+            # If it's a direct dictionary, ensure it has the required fields
+            if "simulation_result" in result and "simulation_output" in result:
+                # Convert old format to new format
+                # Create a new result structure that uses ONLY the user's actual input values
+                new_result = {
+                    "month": month,
+                    "user_name": user_name,  # Use exact user_name from input
+                    "income": {
+                        "salary": user_income,  # Use exact income from input
+                        "investments": 0,
+                        "other": 0,
+                        "total": user_income
+                    },
+                    "expenses": {
+                        "housing": 0,
+                        "utilities": 0,
+                        "groceries": 0,
+                        "transportation": 0,
+                        "healthcare": 0,
+                        "entertainment": 0,
+                        "dining_out": 0,
+                        "subscriptions": 0,
+                        "other": 0,
+                        "total": 0  # Will be calculated from actual expenses
+                    },
+                    "balance": {
+                        "starting": 0,
+                        "ending": 0,
+                        "change": 0
+                    },
+                    "notes": "Based on your provided data."
+                }
+
+                # Always use the user's actual expenses
+                # Map user expenses to categories
+                total_expenses = 0
+                for expense in user_expenses:
+                    if isinstance(expense, dict) and "name" in expense and "amount" in expense:
+                        category = expense["name"].lower()
+                        amount = float(expense["amount"])
+                        total_expenses += amount
+
+                        # Map common expense categories
+                        if "rent" in category or "mortgage" in category or "home" in category or "house" in category:
+                            new_result["expenses"]["housing"] = amount
+                        elif "util" in category or "electric" in category or "water" in category or "gas" in category:
+                            new_result["expenses"]["utilities"] = amount
+                        elif "groc" in category or "food" in category:
+                            new_result["expenses"]["groceries"] = amount
+                        elif "transport" in category or "car" in category or "fuel" in category or "gas" in category:
+                            new_result["expenses"]["transportation"] = amount
+                        elif "health" in category or "medical" in category or "insurance" in category:
+                            new_result["expenses"]["healthcare"] = amount
+                        elif "entertain" in category or "fun" in category or "recreation" in category:
+                            new_result["expenses"]["entertainment"] = amount
+                        elif "dining" in category or "restaurant" in category or "eat out" in category:
+                            new_result["expenses"]["dining_out"] = amount
+                        elif "subscript" in category or "streaming" in category or "netflix" in category:
+                            new_result["expenses"]["subscriptions"] = amount
+                        else:
+                            # If no match, add to other
+                            new_result["expenses"]["other"] += amount
+
+                # Update total expenses
+                new_result["expenses"]["total"] = total_expenses
+
+                # Update balance
+                savings = user_income - total_expenses
+                new_result["balance"]["change"] = savings
+                new_result["balance"]["ending"] = savings
+
+                result = new_result
+
+            # Ensure required fields exist
             result["month"] = month
+            result["user_name"] = user_name
+
+            # Ensure we have a complete structure with all fields for all months
+            # Make sure we have income structure
+            if "income" not in result:
+                result["income"] = {
+                    "salary": user_income,
+                    "investments": 0,
+                    "other": 0,
+                    "total": user_income
+                }
+
+            # Make sure we have expenses structure
+            if "expenses" not in result:
+                result["expenses"] = {
+                    "housing": 0,
+                    "utilities": 0,
+                    "groceries": 0,
+                    "transportation": 0,
+                    "healthcare": 0,
+                    "entertainment": 0,
+                    "dining_out": 0,
+                    "subscriptions": 0,
+                    "other": 0,
+                    "total": 0
+                }
+
+                # Map user expenses to categories
+                total_expenses = 0
+                for expense in user_expenses:
+                    if isinstance(expense, dict) and "name" in expense and "amount" in expense:
+                        category = expense["name"].lower()
+                        amount = float(expense["amount"])
+                        total_expenses += amount
+
+                        # Map to appropriate category
+                        if "rent" in category or "mortgage" in category or "home" in category or "house" in category:
+                            result["expenses"]["housing"] = amount
+                        elif "util" in category or "electric" in category or "water" in category or "gas" in category:
+                            result["expenses"]["utilities"] = amount
+                        elif "groc" in category or "food" in category:
+                            result["expenses"]["groceries"] = amount
+                        elif "transport" in category or "car" in category or "fuel" in category or "gas" in category:
+                            result["expenses"]["transportation"] = amount
+                        elif "health" in category or "medical" in category or "insurance" in category:
+                            result["expenses"]["healthcare"] = amount
+                        elif "entertain" in category or "fun" in category or "recreation" in category:
+                            result["expenses"]["entertainment"] = amount
+                        elif "dining" in category or "restaurant" in category or "eat out" in category:
+                            result["expenses"]["dining_out"] = amount
+                        elif "subscript" in category or "streaming" in category or "netflix" in category:
+                            result["expenses"]["subscriptions"] = amount
+                        else:
+                            # If no match, add to other
+                            result["expenses"]["other"] += amount
+
+                # Update total expenses
+                result["expenses"]["total"] = total_expenses
+
+            # Make sure we have balance structure
+            if "balance" not in result:
+                savings = user_income - result["expenses"]["total"]
+                result["balance"] = {
+                    "starting": 0,
+                    "ending": savings,
+                    "change": savings
+                }
+
+            # Ensure income is correct
+            if "income" in result:
+                if "salary" in result["income"]:
+                    result["income"]["salary"] = user_income
+                if "total" in result["income"]:
+                    # Recalculate total income
+                    result["income"]["total"] = user_income + result["income"].get("investments", 0) + result["income"].get("other", 0)
+
+            # Wrap in a list for consistency
             result = [result]
         elif isinstance(result, list) and result:
-            for item in result:
+            # Process each item in the list
+            for i, item in enumerate(result):
                 if isinstance(item, dict):
-                    item["month"] = month
+                    # Convert old format to new format if needed
+                    if "simulation_result" in item and "simulation_output" in item:
+                        # Create a new result structure that uses ONLY the user's actual input values
+                        new_item = {
+                            "month": month,
+                            "user_name": user_name,  # Use exact user_name from input
+                            "income": {
+                                "salary": user_income,  # Use exact income from input
+                                "investments": 0,
+                                "other": 0,
+                                "total": user_income
+                            },
+                            "expenses": {
+                                "housing": 0,
+                                "utilities": 0,
+                                "groceries": 0,
+                                "transportation": 0,
+                                "healthcare": 0,
+                                "entertainment": 0,
+                                "dining_out": 0,
+                                "subscriptions": 0,
+                                "other": 0,
+                                "total": 0  # Will be calculated from actual expenses
+                            },
+                            "balance": {
+                                "starting": 0,
+                                "ending": 0,
+                                "change": 0
+                            },
+                            "notes": "Based on your provided data."
+                        }
+
+                        # Always use the user's actual expenses
+                        # Map user expenses to categories
+                        total_expenses = 0
+                        for expense in user_expenses:
+                            if isinstance(expense, dict) and "name" in expense and "amount" in expense:
+                                category = expense["name"].lower()
+                                amount = float(expense["amount"])
+                                total_expenses += amount
+
+                                # Map common expense categories
+                                if "rent" in category or "mortgage" in category or "home" in category or "house" in category:
+                                    new_item["expenses"]["housing"] = amount
+                                elif "util" in category or "electric" in category or "water" in category or "gas" in category:
+                                    new_item["expenses"]["utilities"] = amount
+                                elif "groc" in category or "food" in category:
+                                    new_item["expenses"]["groceries"] = amount
+                                elif "transport" in category or "car" in category or "fuel" in category or "gas" in category:
+                                    new_item["expenses"]["transportation"] = amount
+                                elif "health" in category or "medical" in category or "insurance" in category:
+                                    new_item["expenses"]["healthcare"] = amount
+                                elif "entertain" in category or "fun" in category or "recreation" in category:
+                                    new_item["expenses"]["entertainment"] = amount
+                                elif "dining" in category or "restaurant" in category or "eat out" in category:
+                                    new_item["expenses"]["dining_out"] = amount
+                                elif "subscript" in category or "streaming" in category or "netflix" in category:
+                                    new_item["expenses"]["subscriptions"] = amount
+                                else:
+                                    # If no match, add to other
+                                    new_item["expenses"]["other"] += amount
+
+                        # Update total expenses
+                        new_item["expenses"]["total"] = total_expenses
+
+                        # Update balance
+                        savings = user_income - total_expenses
+                        new_item["balance"]["change"] = savings
+                        new_item["balance"]["ending"] = savings
+
+                        result[i] = new_item
+                    else:
+                        # Ensure required fields exist
+                        item["month"] = month
+                        item["user_name"] = user_name
+
+                        # Ensure we have a complete structure with all fields for all months
+                        # Make sure we have income structure
+                        if "income" not in item:
+                            item["income"] = {
+                                "salary": user_income,
+                                "investments": 0,
+                                "other": 0,
+                                "total": user_income
+                            }
+
+                        # Make sure we have expenses structure
+                        if "expenses" not in item:
+                            item["expenses"] = {
+                                "housing": 0,
+                                "utilities": 0,
+                                "groceries": 0,
+                                "transportation": 0,
+                                "healthcare": 0,
+                                "entertainment": 0,
+                                "dining_out": 0,
+                                "subscriptions": 0,
+                                "other": 0,
+                                "total": 0
+                            }
+
+                            # Map user expenses to categories
+                            total_expenses = 0
+                            for expense in user_expenses:
+                                if isinstance(expense, dict) and "name" in expense and "amount" in expense:
+                                    category = expense["name"].lower()
+                                    amount = float(expense["amount"])
+                                    total_expenses += amount
+
+                                    # Map to appropriate category
+                                    if "rent" in category or "mortgage" in category or "home" in category or "house" in category:
+                                        item["expenses"]["housing"] = amount
+                                    elif "util" in category or "electric" in category or "water" in category or "gas" in category:
+                                        item["expenses"]["utilities"] = amount
+                                    elif "groc" in category or "food" in category:
+                                        item["expenses"]["groceries"] = amount
+                                    elif "transport" in category or "car" in category or "fuel" in category or "gas" in category:
+                                        item["expenses"]["transportation"] = amount
+                                    elif "health" in category or "medical" in category or "insurance" in category:
+                                        item["expenses"]["healthcare"] = amount
+                                    elif "entertain" in category or "fun" in category or "recreation" in category:
+                                        item["expenses"]["entertainment"] = amount
+                                    elif "dining" in category or "restaurant" in category or "eat out" in category:
+                                        item["expenses"]["dining_out"] = amount
+                                    elif "subscript" in category or "streaming" in category or "netflix" in category:
+                                        item["expenses"]["subscriptions"] = amount
+                                    else:
+                                        # If no match, add to other
+                                        item["expenses"]["other"] += amount
+
+                            # Update total expenses
+                            item["expenses"]["total"] = total_expenses
+
+                        # Make sure we have balance structure
+                        if "balance" not in item:
+                            savings = user_income - item["expenses"]["total"]
+                            item["balance"] = {
+                                "starting": 0,
+                                "ending": savings,
+                                "change": savings
+                            }
+
+                        # Ensure income is correct
+                        if "income" in item:
+                            if "salary" in item["income"]:
+                                item["income"]["salary"] = user_income
+                            if "total" in item["income"]:
+                                # Recalculate total income
+                                item["income"]["total"] = user_income + item["income"].get("investments", 0) + item["income"].get("other", 0)
 
         # Save to file system
         deduplicate_and_save(output_path, result)
@@ -200,7 +554,14 @@ Your simulation should demonstrate continuity and improvement over time.
         }
     except Exception as e:
         print(f"❌ Error in simulate_cashflow_node: {e}")
-        return state
+        # Create a fallback result with user data
+        # Create a customized fallback based on actual user data
+        fallback = create_fallback_json(month, "cashflow", state["user_inputs"])
+
+        return {
+            **state,
+            "cashflow_result": [fallback]
+        }
 
 def discipline_tracker_node(state: FinancialSimulationState) -> FinancialSimulationState:
     """Track financial discipline for the current month."""
@@ -267,11 +628,34 @@ Your role is to track financial discipline over time and show progressive learni
 
     # Execute chain
     try:
-        result = chain.invoke({
-            "user_inputs": state["user_inputs"],
-            "cashflow_context": cashflow_context,
-            "cashflow_result": state["cashflow_result"]
-        })
+        # Try to get the result from the chain
+        try:
+            raw_result = chain.invoke({
+                "user_inputs": state["user_inputs"],
+                "cashflow_context": cashflow_context,
+                "cashflow_result": state["cashflow_result"]
+            })
+            result = raw_result  # If successful, use the result directly
+        except Exception as e:
+            # If the chain fails, try to extract the raw output and parse it manually
+            print(f"⚠️ Warning: JSON parsing failed in discipline_tracker_node: {e}")
+
+            # Get the raw output from the error message if possible
+            error_str = str(e)
+            if "Invalid json output:" in error_str:
+                raw_json_str = error_str.split("Invalid json output:", 1)[1].strip()
+                # Try to parse the raw JSON with our custom parser
+                parsed_result = safe_parse_json(raw_json_str)
+                if parsed_result:
+                    print(f"✅ Successfully recovered JSON in discipline_tracker_node using custom parser")
+                    result = parsed_result
+                else:
+                    # If parsing still fails, create a fallback JSON
+                    print(f"⚠️ Could not parse JSON in discipline_tracker_node, using fallback")
+                    result = create_fallback_json(month, "discipline_tracker", state["user_inputs"])
+            else:
+                # If we can't extract the raw JSON, create a fallback
+                result = create_fallback_json(month, "discipline_tracker", state["user_inputs"])
 
         # Save result to file
         output_path = f"output/{user_id}_discipline_report_simulation.json"
@@ -307,7 +691,13 @@ Your role is to track financial discipline over time and show progressive learni
         }
     except Exception as e:
         print(f"❌ Error in discipline_tracker_node: {e}")
-        return state
+        # Create a fallback result
+        fallback = create_fallback_json(month, "discipline_tracker", state["user_inputs"])
+        return {
+            **state,
+            "discipline_result": [fallback],
+            "discipline_context": cashflow_context
+        }
 
 def goal_tracker_node(state: FinancialSimulationState) -> FinancialSimulationState:
     """Track financial goals for the current month."""
@@ -374,11 +764,34 @@ Your role is to track financial goals over time and demonstrate progressive lear
 
     # Execute chain
     try:
-        result = chain.invoke({
-            "user_inputs": state["user_inputs"],
-            "cashflow_result": state["cashflow_result"],
-            "discipline_result": state["discipline_result"]
-        })
+        # Try to get the result from the chain
+        try:
+            raw_result = chain.invoke({
+                "user_inputs": state["user_inputs"],
+                "cashflow_result": state["cashflow_result"],
+                "discipline_result": state["discipline_result"]
+            })
+            result = raw_result  # If successful, use the result directly
+        except Exception as e:
+            # If the chain fails, try to extract the raw output and parse it manually
+            print(f"⚠️ Warning: JSON parsing failed in goal_tracker_node: {e}")
+
+            # Get the raw output from the error message if possible
+            error_str = str(e)
+            if "Invalid json output:" in error_str:
+                raw_json_str = error_str.split("Invalid json output:", 1)[1].strip()
+                # Try to parse the raw JSON with our custom parser
+                parsed_result = safe_parse_json(raw_json_str)
+                if parsed_result:
+                    print(f"✅ Successfully recovered JSON in goal_tracker_node using custom parser")
+                    result = parsed_result
+                else:
+                    # If parsing still fails, create a fallback JSON
+                    print(f"⚠️ Could not parse JSON in goal_tracker_node, using fallback")
+                    result = create_fallback_json(month, "goal_tracker", state["user_inputs"])
+            else:
+                # If we can't extract the raw JSON, create a fallback
+                result = create_fallback_json(month, "goal_tracker", state["user_inputs"])
 
         # Save result to file
         output_path = f"output/{user_id}_goal_status_simulation.json"
@@ -413,7 +826,13 @@ Your role is to track financial goals over time and demonstrate progressive lear
         }
     except Exception as e:
         print(f"❌ Error in goal_tracker_node: {e}")
-        return state
+        # Create a fallback result
+        fallback = create_fallback_json(month, "goal_tracker", state["user_inputs"])
+        return {
+            **state,
+            "goal_tracking_result": [fallback],
+            "goal_tracking_context": goal_context
+        }
 
 def behavior_tracker_node(state: FinancialSimulationState) -> FinancialSimulationState:
     """Track financial behavior for the current month."""
@@ -480,12 +899,35 @@ Your role is to analyze financial behaviors over time and demonstrate progressiv
 
     # Execute chain
     try:
-        result = chain.invoke({
-            "user_inputs": state["user_inputs"],
-            "cashflow_result": state["cashflow_result"],
-            "discipline_result": state["discipline_result"],
-            "goal_tracking_result": state["goal_tracking_result"]
-        })
+        # Try to get the result from the chain
+        try:
+            raw_result = chain.invoke({
+                "user_inputs": state["user_inputs"],
+                "cashflow_result": state["cashflow_result"],
+                "discipline_result": state["discipline_result"],
+                "goal_tracking_result": state["goal_tracking_result"]
+            })
+            result = raw_result  # If successful, use the result directly
+        except Exception as e:
+            # If the chain fails, try to extract the raw output and parse it manually
+            print(f"⚠️ Warning: JSON parsing failed in behavior_tracker_node: {e}")
+
+            # Get the raw output from the error message if possible
+            error_str = str(e)
+            if "Invalid json output:" in error_str:
+                raw_json_str = error_str.split("Invalid json output:", 1)[1].strip()
+                # Try to parse the raw JSON with our custom parser
+                parsed_result = safe_parse_json(raw_json_str)
+                if parsed_result:
+                    print(f"✅ Successfully recovered JSON in behavior_tracker_node using custom parser")
+                    result = parsed_result
+                else:
+                    # If parsing still fails, create a fallback JSON
+                    print(f"⚠️ Could not parse JSON in behavior_tracker_node, using fallback")
+                    result = create_fallback_json(month, "behavior_tracker", state["user_inputs"])
+            else:
+                # If we can't extract the raw JSON, create a fallback
+                result = create_fallback_json(month, "behavior_tracker", state["user_inputs"])
 
         # Save result to file
         output_path = f"output/{user_id}_behavior_tracker_simulation.json"
@@ -520,7 +962,13 @@ Your role is to analyze financial behaviors over time and demonstrate progressiv
         }
     except Exception as e:
         print(f"❌ Error in behavior_tracker_node: {e}")
-        return state
+        # Create a fallback result
+        fallback = create_fallback_json(month, "behavior_tracker", state["user_inputs"])
+        return {
+            **state,
+            "behavior_result": [fallback],
+            "behavior_context": behavior_context
+        }
 
 def karma_tracker_node(state: FinancialSimulationState) -> FinancialSimulationState:
     """Track financial karma for the current month."""
@@ -587,13 +1035,36 @@ Your role is to analyze financial karma over time and demonstrate progressive le
 
     # Execute chain
     try:
-        result = chain.invoke({
-            "user_inputs": state["user_inputs"],
-            "cashflow_result": state["cashflow_result"],
-            "discipline_result": state["discipline_result"],
-            "goal_tracking_result": state["goal_tracking_result"],
-            "behavior_result": state["behavior_result"]
-        })
+        # Try to get the result from the chain
+        try:
+            raw_result = chain.invoke({
+                "user_inputs": state["user_inputs"],
+                "cashflow_result": state["cashflow_result"],
+                "discipline_result": state["discipline_result"],
+                "goal_tracking_result": state["goal_tracking_result"],
+                "behavior_result": state["behavior_result"]
+            })
+            result = raw_result  # If successful, use the result directly
+        except Exception as e:
+            # If the chain fails, try to extract the raw output and parse it manually
+            print(f"⚠️ Warning: JSON parsing failed in karma_tracker_node: {e}")
+
+            # Get the raw output from the error message if possible
+            error_str = str(e)
+            if "Invalid json output:" in error_str:
+                raw_json_str = error_str.split("Invalid json output:", 1)[1].strip()
+                # Try to parse the raw JSON with our custom parser
+                parsed_result = safe_parse_json(raw_json_str)
+                if parsed_result:
+                    print(f"✅ Successfully recovered JSON in karma_tracker_node using custom parser")
+                    result = parsed_result
+                else:
+                    # If parsing still fails, create a fallback JSON
+                    print(f"⚠️ Could not parse JSON in karma_tracker_node, using fallback")
+                    result = create_fallback_json(month, "karma_tracker", state["user_inputs"])
+            else:
+                # If we can't extract the raw JSON, create a fallback
+                result = create_fallback_json(month, "karma_tracker", state["user_inputs"])
 
         # Save result to file
         output_path = f"output/{user_id}_karmic_tracker_simulation.json"
@@ -628,7 +1099,13 @@ Your role is to analyze financial karma over time and demonstrate progressive le
         }
     except Exception as e:
         print(f"❌ Error in karma_tracker_node: {e}")
-        return state
+        # Create a fallback result
+        fallback = create_fallback_json(month, "karma_tracker", state["user_inputs"])
+        return {
+            **state,
+            "karma_result": [fallback],
+            "karma_context": karma_context
+        }
 
 def financial_strategy_node(state: FinancialSimulationState) -> FinancialSimulationState:
     """Generate financial strategy for the current month."""
@@ -637,7 +1114,11 @@ def financial_strategy_node(state: FinancialSimulationState) -> FinancialSimulat
     # Build context from previous results
     user_id = state["user_inputs"].get("user_id", "default_user")
     month = state["month_number"]
-    strategy_context = build_financial_strategy_context(month, user_id)
+    try:
+        strategy_context = build_financial_strategy_context(month, user_id)
+    except Exception as e:
+        print(f"⛔ Error building financial strategy context: {e}")
+        strategy_context = f"Financial strategy context for month {month}"
 
     # Load agent config from YAML
     with open("config/agents.yaml", "r") as f:
@@ -695,14 +1176,37 @@ Your role is to develop financial strategies that demonstrate progressive learni
 
     # Execute chain
     try:
-        result = chain.invoke({
-            "user_inputs": state["user_inputs"],
-            "cashflow_result": state["cashflow_result"],
-            "discipline_result": state["discipline_result"],
-            "goal_tracking_result": state["goal_tracking_result"],
-            "behavior_result": state["behavior_result"],
-            "karma_result": state["karma_result"]
-        })
+        # Try to get the result from the chain
+        try:
+            raw_result = chain.invoke({
+                "user_inputs": state["user_inputs"],
+                "cashflow_result": state["cashflow_result"],
+                "discipline_result": state["discipline_result"],
+                "goal_tracking_result": state["goal_tracking_result"],
+                "behavior_result": state["behavior_result"],
+                "karma_result": state["karma_result"]
+            })
+            result = raw_result  # If successful, use the result directly
+        except Exception as e:
+            # If the chain fails, try to extract the raw output and parse it manually
+            print(f"⚠️ Warning: JSON parsing failed in financial_strategy_node: {e}")
+
+            # Get the raw output from the error message if possible
+            error_str = str(e)
+            if "Invalid json output:" in error_str:
+                raw_json_str = error_str.split("Invalid json output:", 1)[1].strip()
+                # Try to parse the raw JSON with our custom parser
+                parsed_result = safe_parse_json(raw_json_str)
+                if parsed_result:
+                    print(f"✅ Successfully recovered JSON in financial_strategy_node using custom parser")
+                    result = parsed_result
+                else:
+                    # If parsing still fails, create a fallback JSON
+                    print(f"⚠️ Could not parse JSON in financial_strategy_node, using fallback")
+                    result = create_fallback_json(month, "financial_strategy", state["user_inputs"])
+            else:
+                # If we can't extract the raw JSON, create a fallback
+                result = create_fallback_json(month, "financial_strategy", state["user_inputs"])
 
         # Save result to file
         output_path = f"output/{user_id}_financial_strategy_simulation.json"
@@ -737,7 +1241,13 @@ Your role is to develop financial strategies that demonstrate progressive learni
         }
     except Exception as e:
         print(f"❌ Error in financial_strategy_node: {e}")
-        return state
+        # Create a fallback result
+        fallback = create_fallback_json(month, "financial_strategy", state["user_inputs"])
+        return {
+            **state,
+            "financial_strategy_result": [fallback],
+            "financial_strategy_context": strategy_context
+        }
 
 # Define the LangGraph workflow
 def create_financial_simulation_graph():
@@ -814,7 +1324,7 @@ def simulate_timeline_langgraph(n_months: int, simulation_unit: str, user_inputs
         eco_context = eco_env.get_context()
 
         # Simulate market conditions
-        market_snapshot, market_context_summary = simulate_monthly_market()
+        _, market_context_summary = simulate_monthly_market()  # Using _ to ignore unused variable
 
         # Update user inputs with economic data
         month_inputs = user_inputs.copy()
@@ -885,12 +1395,15 @@ def simulate_timeline_langgraph(n_months: int, simulation_unit: str, user_inputs
         # Run the workflow
         try:
             # Execute the workflow directly instead of streaming
-            result = workflow.invoke(initial_state)
+            _ = workflow.invoke(initial_state)  # Using _ to ignore unused variable
 
             # Generate monthly reflection report
             user_name = user_inputs["user_name"]
-            assign_persona(user_name, month)
-            generate_monthly_reflection_report(user_name, month)
+            user_id = user_inputs["user_id"]
+            # Use user_id for file naming consistency
+            assign_persona(user_id, month)
+            generate_monthly_reflection_report(user_id, month)
+            print(f"📝 Generated monthly reflection report for user_id: {user_id}, month: {month}")
 
             print(f"✅ Month {month} simulation completed successfully")
 

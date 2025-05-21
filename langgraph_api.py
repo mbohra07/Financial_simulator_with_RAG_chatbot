@@ -51,6 +51,9 @@ executor = ThreadPoolExecutor(max_workers=5)
 # Store for simulation tasks and their status
 simulation_tasks = {}
 
+# Store for teacher agent tasks and their status
+teacher_tasks = {}
+
 # Define the expected schema for the incoming JSON
 class ExpenseItem(BaseModel):
     name: str
@@ -77,10 +80,69 @@ class TeacherQuery(BaseModel):
     user_id: str
     query: str
     pdf_id: Optional[Union[str, List[str]]] = None  # Optional PDF ID(s) to search in specific PDF(s)
+    wait: Optional[bool] = False  # Whether to wait for the response or return immediately
 
 class TeacherResponse(BaseModel):
     """Response model for the teacher agent endpoint"""
     response: str
+    chat_history: Optional[List[Dict[str, str]]] = None
+    task_id: Optional[str] = None
+    status: Optional[str] = None
+
+def run_teacher_agent_background(task_id: str, user_id: str, query: str, chat_history: List[Dict[str, str]], pdf_id: Union[str, List[str], None] = None):
+    """Background task to run the teacher agent"""
+    try:
+        # Update task status to running
+        teacher_tasks[task_id]["status"] = "running"
+
+        print(f"🚀 Running teacher agent in background - task_id: {task_id}, user_id: {user_id}")
+
+        # Run the teacher agent
+        result = run_teacher_agent(
+            user_query=query,
+            user_id=user_id,
+            chat_history=chat_history,
+            pdf_id=pdf_id
+        )
+
+        # Ensure we have a valid response
+        response = result.get("response")
+        if not response:
+            response = "I'm sorry, I couldn't generate a response to your question."
+            result["response"] = response
+
+        # Save the response and chat history
+        teacher_tasks[task_id]["response"] = response
+        teacher_tasks[task_id]["chat_history"] = result.get("chat_history", [])
+
+        # Save the new messages to the database
+        save_chat_message(user_id, "user", query)
+        save_chat_message(user_id, "assistant", response)
+
+        # Update task status
+        teacher_tasks[task_id]["status"] = "completed"
+        print(f"✅ Teacher agent task completed - task_id: {task_id}")
+
+    except Exception as e:
+        error_message = f"I'm sorry, but there was an error processing your question: {str(e)}"
+        teacher_tasks[task_id]["status"] = "failed"
+        teacher_tasks[task_id]["error"] = str(e)
+        teacher_tasks[task_id]["response"] = error_message
+        teacher_tasks[task_id]["chat_history"] = chat_history + [
+            {"role": "user", "content": query},
+            {"role": "assistant", "content": error_message}
+        ]
+
+        # Save the error message to the database
+        try:
+            save_chat_message(user_id, "user", query)
+            save_chat_message(user_id, "assistant", error_message)
+        except Exception:
+            pass  # Ignore database errors at this point
+
+        print(f"❌ Error in teacher agent task {task_id}: {e}")
+        import traceback
+        traceback.print_exc()
 
 def run_simulation_background(task_id: str, user_inputs: dict, simulation_steps: int, simulation_unit: str):
     """Background task to run the simulation"""
@@ -262,6 +324,123 @@ async def get_simulation_results(task_id: str):
                     elif agent_name == "financial_strategy":
                         results["financial_strategy"].append(data)
 
+            # Remove the "reflections" key if it exists
+            if "reflections" in results:
+                del results["reflections"]
+
+            # Add person_history from data folder with user_id prefix
+            data_dir = "data"
+
+            # List all files in the data directory to debug
+            print(f"📂 Files in {data_dir} directory:")
+            try:
+                for file in os.listdir(data_dir):
+                    print(f"  - {file}")
+            except Exception as e:
+                print(f"⚠️ Error listing files in {data_dir}: {e}")
+
+            # Try both naming patterns for person_history
+            person_history_path = f"{data_dir}/{user_id}_person_history.json"
+            alt_person_history_path = f"{data_dir}/string_persona_history.json"  # The actual file name from logs
+
+            print(f"🔍 Looking for person_history at: {person_history_path}")
+            if os.path.exists(person_history_path):
+                print(f"✅ Found person_history file with user_id prefix: {person_history_path}")
+                try:
+                    with open(person_history_path, "r") as f:
+                        person_history_data = json.load(f)
+                        results["person_history"] = person_history_data
+                        print(f"📊 Loaded {len(person_history_data) if isinstance(person_history_data, list) else 1} person_history entries")
+                except Exception as e:
+                    print(f"⚠️ Warning: Could not load {user_id}_person_history.json: {e}")
+                    results["person_history"] = []
+            elif os.path.exists(alt_person_history_path):
+                print(f"✅ Found person_history file with alternate name: {alt_person_history_path}")
+                try:
+                    with open(alt_person_history_path, "r") as f:
+                        person_history_data = json.load(f)
+                        results["person_history"] = person_history_data
+                        print(f"📊 Loaded {len(person_history_data) if isinstance(person_history_data, list) else 1} person_history entries from alternate file")
+                except Exception as e:
+                    print(f"⚠️ Warning: Could not load {alt_person_history_path}: {e}")
+                    results["person_history"] = []
+            else:
+                print(f"❌ Person history file with user_id prefix not found")
+                # Try without user_id prefix as fallback
+                fallback_path = f"{data_dir}/person_history.json"
+                print(f"🔍 Looking for fallback person_history at: {fallback_path}")
+                if os.path.exists(fallback_path):
+                    print(f"✅ Found fallback person_history file: {fallback_path}")
+                    try:
+                        with open(fallback_path, "r") as f:
+                            person_history_data = json.load(f)
+                            results["person_history"] = person_history_data
+                            print(f"📊 Loaded {len(person_history_data) if isinstance(person_history_data, list) else 1} person_history entries from fallback")
+                    except Exception as e:
+                        print(f"⚠️ Warning: Could not load fallback person_history.json: {e}")
+                        results["person_history"] = []
+                else:
+                    print(f"❌ Fallback person_history file not found")
+                    results["person_history"] = []
+
+            # Add monthly reflections from monthly_output folder
+            monthly_output_dir = "monthly_output"
+            monthly_reflections = []
+
+            # Create monthly_output directory if it doesn't exist
+            os.makedirs(monthly_output_dir, exist_ok=True)
+            print(f"📁 Monthly output directory: {monthly_output_dir}")
+
+            # Get all months from the simulation results
+            months = set()
+            for category in ["simulated_cashflow", "discipline_report", "goal_status", "behavior_tracker", "karmic_tracker", "financial_strategy"]:
+                for item in results.get(category, []):
+                    if "month" in item:
+                        months.add(item["month"])
+
+            print(f"🔢 Found months in simulation results: {months}")
+
+            # Load reflection files for each month with user_id prefix
+            for month in months:
+                reflection_path = f"{monthly_output_dir}/{user_id}_reflection_month_{month}.json"
+                print(f"🔍 Looking for monthly reflection at: {reflection_path}")
+                if os.path.exists(reflection_path):
+                    print(f"✅ Found monthly reflection file with user_id prefix: {reflection_path}")
+                    try:
+                        with open(reflection_path, "r") as f:
+                            reflection_data = json.load(f)
+                            # Add month to the reflection data
+                            if isinstance(reflection_data, dict):
+                                reflection_data["month"] = month
+                            monthly_reflections.append(reflection_data)
+                            print(f"📊 Loaded monthly reflection for month {month}")
+                    except Exception as e:
+                        print(f"⚠️ Warning: Could not load {user_id}_reflection_month_{month}.json: {e}")
+
+                        # Try without user_id prefix as fallback
+                        fallback_path = f"{monthly_output_dir}/reflection_month_{month}.json"
+                        print(f"🔍 Looking for fallback monthly reflection at: {fallback_path}")
+                        if os.path.exists(fallback_path):
+                            print(f"✅ Found fallback monthly reflection file: {fallback_path}")
+                            try:
+                                with open(fallback_path, "r") as f:
+                                    reflection_data = json.load(f)
+                                    # Add month to the reflection data
+                                    if isinstance(reflection_data, dict):
+                                        reflection_data["month"] = month
+                                    monthly_reflections.append(reflection_data)
+                                    print(f"📊 Loaded monthly reflection for month {month} from fallback")
+                            except Exception as e:
+                                print(f"⚠️ Warning: Could not load fallback reflection_month_{month}.json: {e}")
+                        else:
+                            print(f"❌ Fallback monthly reflection file for month {month} not found")
+                else:
+                    print(f"❌ Monthly reflection file with user_id prefix for month {month} not found")
+
+            # Add monthly reflections to results
+            results["monthly_reflections"] = monthly_reflections
+            print(f"📊 Added {len(monthly_reflections)} monthly reflections to results")
+
             return {
                 "status": "success",
                 "task_id": task_id,
@@ -284,7 +463,8 @@ async def get_simulation_results(task_id: str):
                     "behavior_tracker": [],
                     "karmic_tracker": [],
                     "financial_strategy": [],
-                    "reflections": []
+                    "person_history": [],
+                    "monthly_reflections": []
                 },
                 "message": "No simulation results available yet"
             }
@@ -343,7 +523,8 @@ async def simulate(request: SimulateRequest):
                     "behavior_tracker": [],
                     "karmic_tracker": [],
                     "financial_strategy": [],
-                    "reflections": []
+                    "person_history": [],
+                    "monthly_reflections": []
                 }
 
                 # Group by agent name
@@ -404,7 +585,8 @@ async def get_simulation_result(user_id: str):
                 "behavior_tracker": [],
                 "karmic_tracker": [],
                 "financial_strategy": [],
-                "reflections": []
+                "person_history": [],
+                "monthly_reflections": []
             }
 
             # Group by agent name
@@ -466,16 +648,70 @@ async def get_simulation_result(user_id: str):
             else:
                 results[task_name] = []
 
-        # Get reflection data if available
-        reflection_path = f"{data_dir}/reflection_month.json"
-        if os.path.exists(reflection_path):
-            with open(reflection_path, "r") as f:
-                reflection_data = json.load(f)
-                # Filter for this user
-                user_reflections = [r for r in reflection_data if r.get("user_name") == user_id]
-                results["reflections"] = user_reflections
+        # Add person_history from data folder with user_id prefix
+        person_history_path = f"{data_dir}/{user_id}_person_history.json"
+        if os.path.exists(person_history_path):
+            try:
+                with open(person_history_path, "r") as f:
+                    person_history_data = json.load(f)
+                    results["person_history"] = person_history_data
+            except Exception as e:
+                print(f"⚠️ Warning: Could not load {user_id}_person_history.json: {e}")
+                results["person_history"] = []
         else:
-            results["reflections"] = []
+            # Try without user_id prefix as fallback
+            fallback_path = f"{data_dir}/person_history.json"
+            if os.path.exists(fallback_path):
+                try:
+                    with open(fallback_path, "r") as f:
+                        person_history_data = json.load(f)
+                        results["person_history"] = person_history_data
+                except Exception as e:
+                    print(f"⚠️ Warning: Could not load fallback person_history.json: {e}")
+                    results["person_history"] = []
+            else:
+                results["person_history"] = []
+
+        # Add monthly reflections from monthly_output folder
+        monthly_output_dir = "monthly_output"
+        monthly_reflections = []
+
+        # Get all months from the simulation results
+        months = set()
+        for category in ["simulated_cashflow", "discipline_report", "goal_status", "behavior_tracker", "karmic_tracker", "financial_strategy"]:
+            for item in results.get(category, []):
+                if "month" in item:
+                    months.add(item["month"])
+
+        # Load reflection files for each month with user_id prefix
+        for month in months:
+            reflection_path = f"{monthly_output_dir}/{user_id}_reflection_month_{month}.json"
+            if os.path.exists(reflection_path):
+                try:
+                    with open(reflection_path, "r") as f:
+                        reflection_data = json.load(f)
+                        # Add month to the reflection data
+                        if isinstance(reflection_data, dict):
+                            reflection_data["month"] = month
+                        monthly_reflections.append(reflection_data)
+                except Exception as e:
+                    print(f"⚠️ Warning: Could not load {user_id}_reflection_month_{month}.json: {e}")
+
+                    # Try without user_id prefix as fallback
+                    fallback_path = f"{monthly_output_dir}/reflection_month_{month}.json"
+                    if os.path.exists(fallback_path):
+                        try:
+                            with open(fallback_path, "r") as f:
+                                reflection_data = json.load(f)
+                                # Add month to the reflection data
+                                if isinstance(reflection_data, dict):
+                                    reflection_data["month"] = month
+                                monthly_reflections.append(reflection_data)
+                        except Exception as e:
+                            print(f"⚠️ Warning: Could not load fallback reflection_month_{month}.json: {e}")
+
+        # Add monthly reflections to results
+        results["monthly_reflections"] = monthly_reflections
 
         print(f"📁 Retrieved data from file system for user {user_id}")
 
@@ -490,13 +726,39 @@ async def get_simulation_result(user_id: str):
 
 # Teacher agent endpoints
 @app.post("/user/learning", response_model=TeacherResponse)
-async def learning_endpoint(query: TeacherQuery):
+@app.get("/user/learning", response_model=TeacherResponse)
+async def learning_endpoint(
+    query: TeacherQuery = None,
+    background_tasks: BackgroundTasks = None,
+    user_id: str = None,
+    query_text: str = None,
+    pdf_id: str = None,
+    wait: bool = False
+):
     """Process a learning query from the user and return a response from the teacher agent"""
     try:
-        print(f"📥 Received learning request - user_id: {query.user_id}, query: '{query.query}'")
+        # Handle both GET and POST requests
+        if query is None:
+            # This is a GET request with query parameters
+            if not user_id or not query_text:
+                raise HTTPException(status_code=400, detail="user_id and query_text are required for GET requests")
+
+            # Create a query object from the parameters
+            actual_user_id = user_id
+            actual_query = query_text
+            actual_pdf_id = pdf_id
+            actual_wait = wait
+        else:
+            # This is a POST request with a JSON body
+            actual_user_id = query.user_id
+            actual_query = query.query
+            actual_pdf_id = query.pdf_id
+            actual_wait = query.wait
+
+        print(f"📥 Received learning request - user_id: {actual_user_id}, query: '{actual_query}'")
 
         # Get chat history from database but limit to last 10 messages to avoid overwhelming context
-        chat_history = get_chat_history_for_user(query.user_id, limit=10)
+        chat_history = get_chat_history_for_user(actual_user_id, limit=10)
 
         # Convert to the format expected by the teacher agent
         formatted_chat_history = []
@@ -512,44 +774,117 @@ async def learning_endpoint(query: TeacherQuery):
 
         # Handle PDF IDs
         pdf_id_param = None
-        if query.pdf_id:
-            if isinstance(query.pdf_id, list):
+        if actual_pdf_id:
+            if isinstance(actual_pdf_id, list):
                 # If multiple PDF IDs are provided
-                print(f"📚 Using multiple PDFs: {', '.join(query.pdf_id)}")
-                if len(query.pdf_id) > 0:
-                    pdf_id_param = query.pdf_id
+                print(f"📚 Using multiple PDFs: {', '.join(actual_pdf_id)}")
+                if len(actual_pdf_id) > 0:
+                    pdf_id_param = actual_pdf_id
             else:
                 # Single PDF ID
-                print(f"📚 Using specific PDF: {query.pdf_id}")
-                pdf_id_param = query.pdf_id
+                print(f"📚 Using specific PDF: {actual_pdf_id}")
+                pdf_id_param = actual_pdf_id
 
         # Ensure query is properly formatted
-        current_query = query.query.strip()
+        current_query = actual_query.strip()
         print(f"🔍 Processing query: '{current_query}'")
 
-        # Run the teacher agent with fresh state
-        result = run_teacher_agent(
-            user_query=current_query,
-            user_id=query.user_id,
-            chat_history=formatted_chat_history,
-            pdf_id=pdf_id_param
-        )
+        # Generate a unique task ID
+        task_id = str(uuid.uuid4())
 
-        # Log the response
-        print(f"✅ Teacher agent response: '{result['response'][:50]}...'")
+        # Check if we should wait for the response or run in the background
+        if actual_wait:
+            # Run the teacher agent synchronously
+            print(f"⏱️ Running teacher agent synchronously - task_id: {task_id}")
+            result = run_teacher_agent(
+                user_query=current_query,
+                user_id=actual_user_id,
+                chat_history=formatted_chat_history,
+                pdf_id=pdf_id_param
+            )
 
-        # Save the new messages to the database
-        save_chat_message(query.user_id, "user", current_query)
-        save_chat_message(query.user_id, "assistant", result["response"])
+            # Log the response
+            print(f"✅ Teacher agent response: '{result['response'][:50]}...'")
 
-        return TeacherResponse(
-            response=result["response"]
-        )
+            # Save the new messages to the database
+            save_chat_message(actual_user_id, "user", current_query)
+            save_chat_message(actual_user_id, "assistant", result["response"])
+
+            return TeacherResponse(
+                response=result["response"],
+                chat_history=result["chat_history"],
+                task_id=task_id,
+                status="completed"
+            )
+        else:
+            # Make sure we have background_tasks for async operation
+            if background_tasks is None:
+                raise HTTPException(status_code=400, detail="Background tasks not available for async operation")
+
+            # Run the teacher agent in the background
+            print(f"🔄 Running teacher agent in background - task_id: {task_id}")
+
+            # Initialize task status
+            teacher_tasks[task_id] = {
+                "status": "queued",
+                "user_id": actual_user_id,
+                "query": current_query,
+                "created_at": asyncio.get_event_loop().time(),
+                "response": None,
+                "chat_history": None
+            }
+
+            # Run teacher agent in background using the executor
+            loop = asyncio.get_event_loop()
+            background_tasks.add_task(
+                loop.run_in_executor,
+                executor,
+                run_teacher_agent_background,
+                task_id,
+                actual_user_id,
+                current_query,
+                formatted_chat_history,
+                pdf_id_param
+            )
+
+            # Save the user message to the database immediately
+            save_chat_message(actual_user_id, "user", current_query)
+
+            return TeacherResponse(
+                response="Your question is being processed. Please check back in a moment for the response.",
+                task_id=task_id,
+                status="queued"
+            )
     except Exception as e:
         print(f"❌ Error in learning endpoint: {e}")
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/user/learning/{task_id}", response_model=TeacherResponse)
+async def get_learning_status(task_id: str):
+    """Get the status and response of a teacher agent task"""
+    if task_id not in teacher_tasks:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    task = teacher_tasks[task_id]
+    status = task.get("status", "queued")
+
+    # Ensure we have a valid response string
+    response = task.get("response")
+    if response is None:
+        if status == "failed":
+            response = "I'm sorry, but there was an error processing your question. Please try again."
+        else:
+            response = "Your question is still being processed. Please check back in a moment."
+
+    # Return the response with all required fields
+    return TeacherResponse(
+        response=response,
+        chat_history=task.get("chat_history", []),
+        task_id=task_id,
+        status=status
+    )
 
 @app.post("/pdf/chat")
 async def pdf_upload_endpoint(
@@ -604,9 +939,11 @@ async def pdf_removal_endpoint(request: PDFRemovalRequest):
 
     Request body:
         user_id: User identifier
-        pdf_id: Optional PDF ID to remove a specific PDF
+        pdf_id: Optional PDF ID or list of PDF IDs to remove specific PDFs
     """
     try:
+        print(f"🗑️ PDF removal request - user_id: {request.user_id}, pdf_id: {request.pdf_id}")
+
         # Remove PDF data
         result = handle_pdf_removal(request.user_id, request.pdf_id)
 
@@ -661,7 +998,7 @@ async def pdf_list_endpoint(user_id: str):
 
 def main():
     import uvicorn
-    uvicorn.run("langgraph_api:app", host="192.168.0.74", port=8000, reload=False)
+    uvicorn.run("langgraph_api:app", host="192.168.3.104", port=8000, reload=False)
 
 # If you want to run with `python langgraph_api.py`
 if __name__ == "__main__":
