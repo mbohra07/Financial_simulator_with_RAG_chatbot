@@ -22,12 +22,7 @@ from langgraph_implementation import simulate_timeline_langgraph
 from teacher_agent import run_teacher_agent, handle_pdf_upload, handle_pdf_removal
 
 # Import MongoDB client
-from database.mongodb_client import (
-    get_all_agent_outputs_for_user,
-    get_agent_outputs_for_month,
-    save_chat_message,
-    get_chat_history_for_user
-)
+from database.mongodb_client import save_chat_message
 
 # ************************************************FastAPI configuration************************************************************
 agentops.init(
@@ -86,7 +81,7 @@ class TeacherResponse(BaseModel):
     """Response model for the teacher agent endpoint"""
     response: str
     chat_history: Optional[List[Dict[str, str]]] = None
-    task_id: Optional[str] = None
+    learning_task_id: Optional[str] = None  # Only use learning_task_id for clarity
     status: Optional[str] = None
 
 def run_teacher_agent_background(task_id: str, user_id: str, query: str, chat_history: List[Dict[str, str]], pdf_id: Union[str, List[str], None] = None):
@@ -477,287 +472,27 @@ async def get_simulation_results(task_id: str):
             }
         )
 
-@app.post("/simulate")
-async def simulate(request: SimulateRequest):
-    """Run a simulation directly and return the result"""
-    try:
-        # Get user_id
-        user_id = request.user_inputs.get("user_id")
+# /simulate endpoint removed as it's not being used
 
-        # Clear previous simulation data for this user if no simulation_id is provided
-        if not request.simulation_id and user_id:
-            try:
-                # Get the database
-                from database.mongodb_client import get_database
-                db = get_database()
-
-                if db:
-                    # Delete previous agent outputs for this user
-                    collection = db["agent_outputs"]
-                    delete_result = collection.delete_many({"user_id": user_id})
-                    print(f"🧹 Deleted {delete_result.deleted_count} previous simulation records for user {user_id}")
-            except Exception as e:
-                print(f"⚠️ Warning: Could not clear previous simulation data: {e}")
-
-        # Run the simulation
-        result = simulate_timeline_langgraph(
-            request.n_months,
-            request.simulation_unit,
-            request.user_inputs,
-            simulation_id=request.simulation_id
-        )
-
-        # If simulation was successful, get the simulation results
-        if result and user_id:
-            # Get the database
-            from database.mongodb_client import get_all_agent_outputs_for_user
-            mongo_results = get_all_agent_outputs_for_user(user_id)
-
-            # Process results into categories
-            if mongo_results:
-                # Process MongoDB results
-                results = {
-                    "simulated_cashflow": [],
-                    "discipline_report": [],
-                    "goal_status": [],
-                    "behavior_tracker": [],
-                    "karmic_tracker": [],
-                    "financial_strategy": [],
-                    "person_history": [],
-                    "monthly_reflections": []
-                }
-
-                # Group by agent name
-                for item in mongo_results:
-                    agent_name = item.get("agent_name", "")
-                    month = item.get("month", 0)
-                    data = item.get("data", {})
-
-                    if data:
-                        # Add month to data if not present
-                        if "month" not in data:
-                            data["month"] = month
-
-                        # Add to appropriate category
-                        if agent_name == "cashflow" or agent_name == "cashflow_simulator":
-                            results["simulated_cashflow"].append(data)
-                        elif agent_name == "discipline_tracker":
-                            results["discipline_report"].append(data)
-                        elif agent_name == "goal_tracker":
-                            results["goal_status"].append(data)
-                        elif agent_name == "behavior_tracker":
-                            results["behavior_tracker"].append(data)
-                        elif agent_name == "karma_tracker":
-                            results["karmic_tracker"].append(data)
-                        elif agent_name == "financial_strategy":
-                            results["financial_strategy"].append(data)
-
-                return {
-                    "status": "success",
-                    "message": f"Simulation completed for {request.n_months} {request.simulation_unit}",
-                    "user_id": user_id,
-                    "data": results,
-                    "source": "mongodb"
-                }
-
-        # Default response if we couldn't get detailed results
-        return {
-            "status": "success",
-            "message": f"Simulation completed for {request.n_months} {request.simulation_unit}",
-            "result": result
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/get-simulation-result/{user_id}")
-async def get_simulation_result(user_id: str):
-    """Get all simulation results for a user"""
-    try:
-        # First try to get data from MongoDB
-        mongo_results = get_all_agent_outputs_for_user(user_id)
-
-        if mongo_results:
-            # Process MongoDB results
-            results = {
-                "simulated_cashflow": [],
-                "discipline_report": [],
-                "goal_status": [],
-                "behavior_tracker": [],
-                "karmic_tracker": [],
-                "financial_strategy": [],
-                "person_history": [],
-                "monthly_reflections": []
-            }
-
-            # Group by agent name
-            for item in mongo_results:
-                agent_name = item.get("agent_name", "")
-                month = item.get("month", 0)
-                data = item.get("data", {})
-
-                if data:
-                    # Add month to data if not present
-                    if "month" not in data:
-                        data["month"] = month
-
-                    # Add to appropriate category
-                    if agent_name == "cashflow" or agent_name == "cashflow_simulator":
-                        results["simulated_cashflow"].append(data)
-                    elif agent_name == "discipline_tracker":
-                        results["discipline_report"].append(data)
-                    elif agent_name == "goal_tracker":
-                        results["goal_status"].append(data)
-                    elif agent_name == "behavior_tracker":
-                        results["behavior_tracker"].append(data)
-                    elif agent_name == "karma_tracker":
-                        results["karmic_tracker"].append(data)
-                    elif agent_name == "financial_strategy":
-                        results["financial_strategy"].append(data)
-
-            print(f"📊 Retrieved {len(mongo_results)} records from MongoDB for user {user_id}")
-
-            return {
-                "status": "success",
-                "user_id": user_id,
-                "data": results,
-                "source": "mongodb"
-            }
-
-        # Fallback to file system if MongoDB has no data
-        output_dir = "output"
-        data_dir = "data"
-
-        # Standard task files
-        task_file_names = [
-            "simulated_cashflow",
-            "discipline_report",
-            "goal_status",
-            "behavior_tracker",
-            "karmic_tracker",
-            "financial_strategy"
-        ]
-
-        results = {}
-
-        # Collect all task results
-        for task_name in task_file_names:
-            file_path = f"{output_dir}/{user_id}_{task_name}_simulation.json"
-            if os.path.exists(file_path):
-                with open(file_path, "r") as f:
-                    results[task_name] = json.load(f)
-            else:
-                results[task_name] = []
-
-        # Add person_history from data folder with user_id prefix
-        person_history_path = f"{data_dir}/{user_id}_person_history.json"
-        if os.path.exists(person_history_path):
-            try:
-                with open(person_history_path, "r") as f:
-                    person_history_data = json.load(f)
-                    results["person_history"] = person_history_data
-            except Exception as e:
-                print(f"⚠️ Warning: Could not load {user_id}_person_history.json: {e}")
-                results["person_history"] = []
-        else:
-            # Try without user_id prefix as fallback
-            fallback_path = f"{data_dir}/person_history.json"
-            if os.path.exists(fallback_path):
-                try:
-                    with open(fallback_path, "r") as f:
-                        person_history_data = json.load(f)
-                        results["person_history"] = person_history_data
-                except Exception as e:
-                    print(f"⚠️ Warning: Could not load fallback person_history.json: {e}")
-                    results["person_history"] = []
-            else:
-                results["person_history"] = []
-
-        # Add monthly reflections from monthly_output folder
-        monthly_output_dir = "monthly_output"
-        monthly_reflections = []
-
-        # Get all months from the simulation results
-        months = set()
-        for category in ["simulated_cashflow", "discipline_report", "goal_status", "behavior_tracker", "karmic_tracker", "financial_strategy"]:
-            for item in results.get(category, []):
-                if "month" in item:
-                    months.add(item["month"])
-
-        # Load reflection files for each month with user_id prefix
-        for month in months:
-            reflection_path = f"{monthly_output_dir}/{user_id}_reflection_month_{month}.json"
-            if os.path.exists(reflection_path):
-                try:
-                    with open(reflection_path, "r") as f:
-                        reflection_data = json.load(f)
-                        # Add month to the reflection data
-                        if isinstance(reflection_data, dict):
-                            reflection_data["month"] = month
-                        monthly_reflections.append(reflection_data)
-                except Exception as e:
-                    print(f"⚠️ Warning: Could not load {user_id}_reflection_month_{month}.json: {e}")
-
-                    # Try without user_id prefix as fallback
-                    fallback_path = f"{monthly_output_dir}/reflection_month_{month}.json"
-                    if os.path.exists(fallback_path):
-                        try:
-                            with open(fallback_path, "r") as f:
-                                reflection_data = json.load(f)
-                                # Add month to the reflection data
-                                if isinstance(reflection_data, dict):
-                                    reflection_data["month"] = month
-                                monthly_reflections.append(reflection_data)
-                        except Exception as e:
-                            print(f"⚠️ Warning: Could not load fallback reflection_month_{month}.json: {e}")
-
-        # Add monthly reflections to results
-        results["monthly_reflections"] = monthly_reflections
-
-        print(f"📁 Retrieved data from file system for user {user_id}")
-
-        return {
-            "status": "success",
-            "user_id": user_id,
-            "data": results,
-            "source": "filesystem"
-        }
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
+# /get-simulation-result/{user_id} endpoint removed as it's not being used
 
 # Teacher agent endpoints
 @app.post("/user/learning", response_model=TeacherResponse)
-@app.get("/user/learning", response_model=TeacherResponse)
 async def learning_endpoint(
-    query: TeacherQuery = None,
-    background_tasks: BackgroundTasks = None,
-    user_id: str = None,
-    query_text: str = None,
-    pdf_id: str = None,
-    wait: bool = False
+    query: TeacherQuery,
+    background_tasks: BackgroundTasks
 ):
     """Process a learning query from the user and return a response from the teacher agent"""
     try:
-        # Handle both GET and POST requests
-        if query is None:
-            # This is a GET request with query parameters
-            if not user_id or not query_text:
-                raise HTTPException(status_code=400, detail="user_id and query_text are required for GET requests")
-
-            # Create a query object from the parameters
-            actual_user_id = user_id
-            actual_query = query_text
-            actual_pdf_id = pdf_id
-            actual_wait = wait
-        else:
-            # This is a POST request with a JSON body
-            actual_user_id = query.user_id
-            actual_query = query.query
-            actual_pdf_id = query.pdf_id
-            actual_wait = query.wait
+        actual_user_id = query.user_id
+        actual_query = query.query
+        actual_pdf_id = query.pdf_id
+        actual_wait = query.wait
 
         print(f"📥 Received learning request - user_id: {actual_user_id}, query: '{actual_query}'")
 
         # Get chat history from database but limit to last 10 messages to avoid overwhelming context
+        from database.mongodb_client import get_chat_history_for_user
         chat_history = get_chat_history_for_user(actual_user_id, limit=10)
 
         # Convert to the format expected by the teacher agent
@@ -813,14 +548,10 @@ async def learning_endpoint(
             return TeacherResponse(
                 response=result["response"],
                 chat_history=result["chat_history"],
-                task_id=task_id,
+                learning_task_id=task_id,  # Only use learning_task_id for clarity
                 status="completed"
             )
         else:
-            # Make sure we have background_tasks for async operation
-            if background_tasks is None:
-                raise HTTPException(status_code=400, detail="Background tasks not available for async operation")
-
             # Run the teacher agent in the background
             print(f"🔄 Running teacher agent in background - task_id: {task_id}")
 
@@ -852,7 +583,7 @@ async def learning_endpoint(
 
             return TeacherResponse(
                 response="Your question is being processed. Please check back in a moment for the response.",
-                task_id=task_id,
+                learning_task_id=task_id,  # Only use learning_task_id for clarity
                 status="queued"
             )
     except Exception as e:
@@ -861,13 +592,13 @@ async def learning_endpoint(
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/user/learning/{task_id}", response_model=TeacherResponse)
-async def get_learning_status(task_id: str):
+@app.get("/user/learning/{learning_task_id}", response_model=TeacherResponse)
+async def get_learning_status(learning_task_id: str):
     """Get the status and response of a teacher agent task"""
-    if task_id not in teacher_tasks:
-        raise HTTPException(status_code=404, detail="Task not found")
+    if learning_task_id not in teacher_tasks:
+        raise HTTPException(status_code=404, detail="Learning task not found")
 
-    task = teacher_tasks[task_id]
+    task = teacher_tasks[learning_task_id]
     status = task.get("status", "queued")
 
     # Ensure we have a valid response string
@@ -882,7 +613,7 @@ async def get_learning_status(task_id: str):
     return TeacherResponse(
         response=response,
         chat_history=task.get("chat_history", []),
-        task_id=task_id,
+        learning_task_id=learning_task_id,  # Only use learning_task_id for clarity
         status=status
     )
 

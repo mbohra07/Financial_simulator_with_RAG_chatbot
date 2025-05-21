@@ -25,5 +25,220 @@
             "ending": 9500000.0,
             "change": 9500000.0
         }
+    },
+    {
+        "month": 2,
+        "timestamp": "2025-05-22T01:29:29.626547",
+        "user_name": "madhuram",
+        "income": {
+            "salary": 10000000.0,
+            "investments": 0,
+            "other": 0,
+            "total": 10000000.0
+        },
+        "expenses": {
+            "housing": 0,
+            "utilities": 0,
+            "groceries": 0,
+            "transportation": 0,
+            "healthcare": 0,
+            "entertainment": 0,
+            "dining_out": 0,
+            "subscriptions": 0,
+            "other": 0,
+            "total": 30000.0
+        },
+        "savings": {
+            "amount": 9970000.0,
+            "percentage_of_income": 99.7,
+            "target_met": false
+        },
+        "balance": {
+            "starting": 0,
+            "ending": 9970000.0,
+            "change": 9970000.0
+        },
+        "analysis": {
+            "spending_categories": {
+                "essential": 0,
+                "non_essential": 0,
+                "ratio": 0
+            },
+            "savings_rate": "N/A",
+            "cash_flow": "Neutral"
+        },
+        "notes": "This is a minimal report based on your provided data."
+    },
+    {
+        "month": 3,
+        "timestamp": "2025-05-22T01:29:46.882715",
+        "user_name": "madhuram",
+        "income": {
+            "salary": 10000000.0,
+            "investments": 0,
+            "other": 0,
+            "total": 10000000.0
+        },
+        "expenses": {
+            "housing": 0,
+            "utilities": 0,
+            "groceries": 0,
+            "transportation": 0,
+            "healthcare": 0,
+            "entertainment": 0,
+            "dining_out": 0,
+            "subscriptions": 0,
+            "other": 0,
+            "total": 30000.0
+        },
+        "savings": {
+            "amount": 9970000.0,
+            "percentage_of_income": 99.7,
+            "target_met": false
+        },
+        "balance": {
+            "starting": 0,
+            "ending": 9970000.0,
+            "change": 9970000.0
+        },
+        "analysis": {
+            "spending_categories": {
+                "essential": 0,
+                "non_essential": 0,
+                "ratio": 0
+            },
+            "savings_rate": "N/A",
+            "cash_flow": "Neutral"
+        },
+        "notes": "This is a minimal report based on your provided data."
+    },
+    {
+        "month": 4,
+        "timestamp": "2025-05-22T01:30:03.032004",
+        "user_name": "madhuram",
+        "income": {
+            "salary": 10000000.0,
+            "investments": 0,
+            "other": 0,
+            "total": 10000000.0
+        },
+        "expenses": {
+            "housing": 0,
+            "utilities": 0,
+            "groceries": 0,
+            "transportation": 0,
+            "healthcare": 0,
+            "entertainment": 0,
+            "dining_out": 0,
+            "subscriptions": 0,
+            "other": 0,
+            "total": 30000.0
+        },
+        "savings": {
+            "amount": 9970000.0,
+            "percentage_of_income": 99.7,
+            "target_met": false
+        },
+        "balance": {
+            "starting": 0,
+            "ending": 9970000.0,
+            "change": 9970000.0
+        },
+        "analysis": {
+            "spending_categories": {
+                "essential": 0,
+                "non_essential": 0,
+                "ratio": 0
+            },
+            "savings_rate": "N/A",
+            "cash_flow": "Neutral"
+        },
+        "notes": "This is a minimal report based on your provided data."
+    },
+    {
+        "month": 5,
+        "timestamp": "2025-05-22T01:30:19.402678",
+        "user_name": "madhuram",
+        "income": {
+            "salary": 10000000.0,
+            "investments": 0,
+            "other": 0,
+            "total": 10000000.0
+        },
+        "expenses": {
+            "housing": 0,
+            "utilities": 0,
+            "groceries": 0,
+            "transportation": 0,
+            "healthcare": 0,
+            "entertainment": 0,
+            "dining_out": 0,
+            "subscriptions": 0,
+            "other": 0,
+            "total": 30000.0
+        },
+        "savings": {
+            "amount": 9970000.0,
+            "percentage_of_income": 99.7,
+            "target_met": false
+        },
+        "balance": {
+            "starting": 0,
+            "ending": 9970000.0,
+            "change": 9970000.0
+        },
+        "analysis": {
+            "spending_categories": {
+                "essential": 0,
+                "non_essential": 0,
+                "ratio": 0
+            },
+            "savings_rate": "N/A",
+            "cash_flow": "Neutral"
+        },
+        "notes": "This is a minimal report based on your provided data."
+    },
+    {
+        "month": 6,
+        "timestamp": "2025-05-22T01:30:35.164138",
+        "user_name": "madhuram",
+        "income": {
+            "salary": 10000000.0,
+            "investments": 0,
+            "other": 0,
+            "total": 10000000.0
+        },
+        "expenses": {
+            "housing": 0,
+            "utilities": 0,
+            "groceries": 0,
+            "transportation": 0,
+            "healthcare": 0,
+            "entertainment": 0,
+            "dining_out": 0,
+            "subscriptions": 0,
+            "other": 0,
+            "total": 30000.0
+        },
+        "savings": {
+            "amount": 9970000.0,
+            "percentage_of_income": 99.7,
+            "target_met": false
+        },
+        "balance": {
+            "starting": 0,
+            "ending": 9970000.0,
+            "change": 9970000.0
+        },
+        "analysis": {
+            "spending_categories": {
+                "essential": 0,
+                "non_essential": 0,
+                "ratio": 0
+            },
+            "savings_rate": "N/A",
+            "cash_flow": "Neutral"
+        },
+        "notes": "This is a minimal report based on your provided data."
     }
 ]
