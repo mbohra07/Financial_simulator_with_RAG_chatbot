@@ -1,26 +1,17 @@
 [
     {
-        "user_name": "John Doe",
-        "monthly_income": 5000,
-        "expenses": {
-            "housing": 1500,
-            "food": 800,
-            "transportation": 500,
-            "entertainment": 200,
-            "savings": 0
+        "simulation_result": {
+            "user_name": "John Doe",
+            "monthly_income": 5000,
+            "expenses": {
+                "housing": 1500,
+                "food": 800,
+                "transportation": 500,
+                "entertainment": 200,
+                "savings": 500,
+                "miscellaneous": 100
+            }
         },
-        "total_expenses": 3500,
-        "financial_goal": "long_term_investment",
-        "financial_type": "conservative",
-        "risk_level": "low",
-        "market_context": "stable",
-        "inflation": 2,
-        "interest_rate": 4,
-        "cost_of_living_index": 120,
-        "notes": "Consider increasing income or reducing expenses to reach financial goal.",
-        "savings": 1500,
-        "economic_context": "stable",
-        "balance": 1500,
         "month": 1
     },
     {
@@ -31,60 +22,113 @@
                 "housing": 1500,
                 "food": 800,
                 "transportation": 500,
+                "insurance": 200,
                 "entertainment": 200,
-                "savings": 600,
-                "miscellaneous": 100
-            },
-            "total_expenses": 4200,
-            "financial_goal": "long_term_investment",
-            "financial_type": "conservative",
-            "risk_level": "low",
-            "market_context": "stable",
-            "inflation": 2,
-            "interest_rate": 4,
-            "cost_of_living_index": 120
+                "savings": 800,
+                "misc": 100
+            }
         },
-        "notes": "We've noticed an increase in miscellaneous expenses. Consider categorizing and tracking these expenses to identify areas for reduction. Based on your conservative financial type and low risk level, we recommend allocating a higher percentage of your income towards savings and investments. Consider exploring low-risk investment options to achieve your long-term financial goals.",
-        "savings_recommendation": 22,
-        "investment_recommendation": 12,
-        "balance": 800,
+        "total_expenses": 4200,
+        "financial_goal": "retirement",
+        "financial_type": "conservative",
+        "risk_level": "low",
+        "market_context": "stable",
+        "inflation": 2,
+        "interest_rate": 3,
+        "cost_of_living_index": 120,
+        "current_balance": 10800,
+        "notes": "Continue increasing savings for retirement goal. Consider exploring low-risk investment options.",
+        "recommended_savings": 800,
+        "recommended_investment": 500,
+        "cash_flow": 800,
         "month": 2
     },
     {
         "simulation_result": {
             "user_name": "John Doe",
-            "monthly_income": 5200,
+            "monthly_income": 5000,
+            "expenses": {
+                "housing": 1500,
+                "food": 800,
+                "transportation": 480,
+                "insurance": 200,
+                "entertainment": 160,
+                "misc": 100
+            },
+            "total_expenses": 4290,
+            "financial_goal": "retirement",
+            "financial_type": "conservative",
+            "risk_level": "low",
+            "market_context": "stable",
+            "inflation": 2,
+            "interest_rate": 3,
+            "cost_of_living_index": 120,
+            "current_balance": 11420,
+            "notes": "Excellent job on reducing transportation expenses! Consider allocating a larger portion to investments for retirement goal.",
+            "recommended_savings": 1100,
+            "recommended_investment": 300,
+            "cash_flow": 710,
+            "month": 3
+        },
+        "month": 3
+    },
+    {
+        "simulation_result": {
+            "user_name": "John Doe",
+            "monthly_income": 5000,
             "expenses": {
                 "housing": 1500,
                 "food": 800,
                 "transportation": 500,
-                "entertainment": 200,
-                "savings": 500,
-                "miscellaneous": 0
+                "insurance": 200,
+                "entertainment": 160,
+                "savings": 1200,
+                "misc": 100
             },
-            "total_expenses": 4500,
-            "notes": "Increase income by 2% from last month. Reduce entertainment expenses by 20% from last month. Increase savings by 25% from last month.",
-            "savings_rate": 0.096,
-            "financial_goal_progress": 0.05
+            "total_expenses": 4460,
+            "financial_goal": "retirement",
+            "financial_type": "conservative",
+            "risk_level": "low",
+            "market_context": "stable",
+            "inflation": 2,
+            "interest_rate": 3,
+            "cost_of_living_index": 120,
+            "current_balance": 12060,
+            "notes": "Excellent job increasing savings and investment! Consider exploring low-risk investment options to diversify portfolio. Continue to maintain low expenses and allocate a larger portion to investments for long-term growth.",
+            "recommended_savings": 1300,
+            "recommended_investment": 350,
+            "cash_flow": 540,
+            "month": 4
         },
         "month": 4
     },
     {
         "simulation_result": {
             "user_name": "John Doe",
-            "monthly_income": 5324,
+            "monthly_income": 5000,
             "expenses": {
                 "housing": 1500,
                 "food": 800,
-                "transportation": 720,
-                "entertainment": 400,
-                "savings": 1250,
-                "miscellaneous": 0
+                "transportation": 500,
+                "insurance": 200,
+                "entertainment": 120,
+                "savings": 1400,
+                "misc": 100
             },
-            "total_expenses": 4570,
-            "notes": "Continue to reduce entertainment expenses and allocate more funds towards savings. Consider exploring ways to reduce transportation expenses by 10%.",
-            "savings_rate": 0.235,
-            "financial_goal_progress": 0.06
+            "total_expenses": 4420,
+            "financial_goal": "retirement",
+            "financial_type": "conservative",
+            "risk_level": "low",
+            "market_context": "stable",
+            "inflation": 2,
+            "interest_rate": 3,
+            "cost_of_living_index": 120,
+            "current_balance": 12920,
+            "notes": "Excellent job maintaining low expenses and increasing savings for retirement goal! Consider exploring tax-advantaged retirement accounts to optimize savings. Continue to monitor entertainment expenses to ensure they don't creep up.",
+            "recommended_savings": 1500,
+            "recommended_investment": 450,
+            "cash_flow": 580,
+            "month": 5
         },
         "month": 5
     },
@@ -97,41 +141,11 @@
                 "food": 800,
                 "transportation": 500,
                 "insurance": 200,
-                "entertainment": 180,
-                "savings": 1000,
-                "misc": 100
-            },
-            "total_expenses": 4380,
-            "financial_goal": "retirement",
-            "financial_type": "conservative",
-            "risk_level": "low",
-            "market_context": "stable",
-            "inflation": 2,
-            "interest_rate": 3,
-            "cost_of_living_index": 120,
-            "current_balance": 11620,
-            "notes": "Excellent job increasing savings and maintaining low expenses! Consider allocating a larger portion to investments for retirement goal.",
-            "recommended_savings": 1100,
-            "recommended_investment": 300,
-            "cash_flow": 620,
-            "month": 3
-        },
-        "month": 3
-    },
-    {
-        "simulation_result": {
-            "name": "John Doe",
-            "income": 5000,
-            "expenses": {
-                "housing": 1500,
-                "food": 800,
-                "transportation": 500,
-                "insurance": 200,
                 "entertainment": 100,
-                "savings": 1700,
+                "savings": 1600,
                 "misc": 100
             },
-            "total_expenses": 4700,
+            "total_expenses": 4500,
             "financial_goal": "retirement",
             "financial_type": "conservative",
             "risk_level": "low",
@@ -140,10 +154,10 @@
             "interest_rate": 3,
             "cost_of_living_index": 120,
             "current_balance": 13220,
-            "notes": "Excellent job reducing entertainment expenses and increasing savings! Consider exploring tax-advantaged retirement accounts to optimize savings. Also, review transportation expenses to identify areas for reduction.",
-            "recommended_savings": 1800,
+            "notes": "Excellent job reducing entertainment expenses and increasing savings! Continue to explore tax-advantaged retirement accounts and consider allocating a larger portion to investments for long-term growth.",
+            "recommended_savings": 1700,
             "recommended_investment": 550,
-            "cash_flow": 300,
+            "cash_flow": 500,
             "month": 6
         },
         "month": 6

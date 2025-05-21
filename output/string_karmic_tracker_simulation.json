@@ -19,7 +19,7 @@
         "karma_score": 70,
         "sattvic_traits": 50,
         "tamasic_traits": 10,
-        "rajasic_traits": 30,
+        "rajasic_traits": 40,
         "karma_trend": "Improving",
         "month": 3
     },
@@ -27,7 +27,7 @@
         "karma_score": 75,
         "sattvic_traits": 55,
         "tamasic_traits": 5,
-        "rajasic_traits": 35,
+        "rajasic_traits": 40,
         "karma_trend": "Improving",
         "month": 4
     },
@@ -35,15 +35,15 @@
         "karma_score": 80,
         "sattvic_traits": 60,
         "tamasic_traits": 5,
-        "rajasic_traits": 20,
+        "rajasic_traits": 15,
         "karma_trend": "Improving",
         "month": 5
     },
     {
         "karma_score": 85,
         "sattvic_traits": 65,
-        "tamasic_traits": 5,
-        "rajasic_traits": 30,
+        "tamasic_traits": 0,
+        "rajasic_traits": 35,
         "karma_trend": "Improving",
         "month": 6
     }

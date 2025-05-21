@@ -70,6 +70,7 @@ class SimulateRequest(BaseModel):
     n_months: int = 6  # Default to 6 months
     simulation_unit: str = "Months"
     user_inputs: dict
+    simulation_id: Optional[str] = None  # Optional simulation ID
 
 # Teacher agent models
 class TeacherQuery(BaseModel):
@@ -87,8 +88,22 @@ def run_simulation_background(task_id: str, user_inputs: dict, simulation_steps:
         # Update task status to running
         simulation_tasks[task_id]["status"] = "running"
 
-        # Run the simulation with task_id for status updates
-        result = simulate_timeline_langgraph(simulation_steps, simulation_unit, user_inputs, task_id)
+        # Generate a simulation ID
+        from database.mongodb_client import generate_simulation_id
+        simulation_id = generate_simulation_id()
+
+        # Store simulation_id in task details
+        simulation_tasks[task_id]["simulation_id"] = simulation_id
+        print(f"📝 Simulation ID: {simulation_id} for task {task_id}")
+
+        # Run the simulation with task_id and simulation_id for status updates
+        result = simulate_timeline_langgraph(
+            simulation_steps,
+            simulation_unit,
+            user_inputs,
+            task_id,
+            simulation_id
+        )
 
         # Update task status based on result
         if result:
@@ -107,6 +122,23 @@ async def start_simulation(payload: SimulationInput, background_tasks: Backgroun
     try:
         # Convert pydantic model to dict
         user_inputs = payload.model_dump()
+
+        # Get user_id
+        user_id = user_inputs["user_id"]
+
+        # Clear previous simulation data for this user (optional)
+        try:
+            # Get the database
+            from database.mongodb_client import get_database
+            db = get_database()
+
+            if db:
+                # Delete previous agent outputs for this user
+                collection = db["agent_outputs"]
+                delete_result = collection.delete_many({"user_id": user_id})
+                print(f"🧹 Deleted {delete_result.deleted_count} previous simulation records for user {user_id}")
+        except Exception as e:
+            print(f"⚠️ Warning: Could not clear previous simulation data: {e}")
 
         # Generate a unique task ID
         task_id = str(uuid.uuid4())
@@ -151,17 +183,203 @@ async def get_simulation_status(task_id: str):
         "task_details": simulation_tasks[task_id]
     }
 
+@app.get("/simulation-results/{task_id}")
+async def get_simulation_results(task_id: str):
+    """Get the latest results for a simulation task in progress"""
+    if task_id not in simulation_tasks:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    # Get user_id from the task
+    user_id = simulation_tasks[task_id].get("user_id")
+    if not user_id:
+        raise HTTPException(status_code=400, detail="User ID not found in task")
+
+    # Get simulation_id if available
+    simulation_id = simulation_tasks[task_id].get("simulation_id")
+
+    # Get the latest results from MongoDB
+    try:
+        # If simulation_id is available, filter by it for more precise results
+        if simulation_id:
+            # Get the database
+            from database.mongodb_client import get_database
+            db = get_database()
+
+            # Query for this specific simulation
+            query = {
+                "user_id": user_id,
+                "simulation_id": simulation_id
+            }
+
+            # Get agent outputs collection
+            collection = db["agent_outputs"]
+            mongo_results = list(collection.find(query))
+
+            # Convert ObjectId to string
+            for result in mongo_results:
+                if "_id" in result:
+                    result["_id"] = str(result["_id"])
+        else:
+            # Fall back to getting all results for the user
+            from database.mongodb_client import get_all_agent_outputs_for_user
+            mongo_results = get_all_agent_outputs_for_user(user_id)
+
+        # Process results into categories
+        if mongo_results:
+            # Process MongoDB results
+            results = {
+                "simulated_cashflow": [],
+                "discipline_report": [],
+                "goal_status": [],
+                "behavior_tracker": [],
+                "karmic_tracker": [],
+                "financial_strategy": [],
+                "reflections": []
+            }
+
+            # Group by agent name
+            for item in mongo_results:
+                agent_name = item.get("agent_name", "")
+                month = item.get("month", 0)
+                data = item.get("data", {})
+
+                if data:
+                    # Add month to data if not present
+                    if "month" not in data:
+                        data["month"] = month
+
+                    # Add to appropriate category
+                    if agent_name == "cashflow" or agent_name == "cashflow_simulator":
+                        results["simulated_cashflow"].append(data)
+                    elif agent_name == "discipline_tracker":
+                        results["discipline_report"].append(data)
+                    elif agent_name == "goal_tracker":
+                        results["goal_status"].append(data)
+                    elif agent_name == "behavior_tracker":
+                        results["behavior_tracker"].append(data)
+                    elif agent_name == "karma_tracker":
+                        results["karmic_tracker"].append(data)
+                    elif agent_name == "financial_strategy":
+                        results["financial_strategy"].append(data)
+
+            return {
+                "status": "success",
+                "task_id": task_id,
+                "task_status": simulation_tasks[task_id]["status"],
+                "user_id": user_id,
+                "data": results,
+                "source": "mongodb"
+            }
+        else:
+            # No results yet
+            return {
+                "status": "success",
+                "task_id": task_id,
+                "task_status": simulation_tasks[task_id]["status"],
+                "user_id": user_id,
+                "data": {
+                    "simulated_cashflow": [],
+                    "discipline_report": [],
+                    "goal_status": [],
+                    "behavior_tracker": [],
+                    "karmic_tracker": [],
+                    "financial_strategy": [],
+                    "reflections": []
+                },
+                "message": "No simulation results available yet"
+            }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": "error",
+                "message": f"Error retrieving simulation results: {str(e)}"
+            }
+        )
+
 @app.post("/simulate")
 async def simulate(request: SimulateRequest):
     """Run a simulation directly and return the result"""
     try:
+        # Get user_id
+        user_id = request.user_inputs.get("user_id")
+
+        # Clear previous simulation data for this user if no simulation_id is provided
+        if not request.simulation_id and user_id:
+            try:
+                # Get the database
+                from database.mongodb_client import get_database
+                db = get_database()
+
+                if db:
+                    # Delete previous agent outputs for this user
+                    collection = db["agent_outputs"]
+                    delete_result = collection.delete_many({"user_id": user_id})
+                    print(f"🧹 Deleted {delete_result.deleted_count} previous simulation records for user {user_id}")
+            except Exception as e:
+                print(f"⚠️ Warning: Could not clear previous simulation data: {e}")
+
         # Run the simulation
         result = simulate_timeline_langgraph(
             request.n_months,
             request.simulation_unit,
-            request.user_inputs
+            request.user_inputs,
+            simulation_id=request.simulation_id
         )
 
+        # If simulation was successful, get the simulation results
+        if result and user_id:
+            # Get the database
+            from database.mongodb_client import get_all_agent_outputs_for_user
+            mongo_results = get_all_agent_outputs_for_user(user_id)
+
+            # Process results into categories
+            if mongo_results:
+                # Process MongoDB results
+                results = {
+                    "simulated_cashflow": [],
+                    "discipline_report": [],
+                    "goal_status": [],
+                    "behavior_tracker": [],
+                    "karmic_tracker": [],
+                    "financial_strategy": [],
+                    "reflections": []
+                }
+
+                # Group by agent name
+                for item in mongo_results:
+                    agent_name = item.get("agent_name", "")
+                    month = item.get("month", 0)
+                    data = item.get("data", {})
+
+                    if data:
+                        # Add month to data if not present
+                        if "month" not in data:
+                            data["month"] = month
+
+                        # Add to appropriate category
+                        if agent_name == "cashflow" or agent_name == "cashflow_simulator":
+                            results["simulated_cashflow"].append(data)
+                        elif agent_name == "discipline_tracker":
+                            results["discipline_report"].append(data)
+                        elif agent_name == "goal_tracker":
+                            results["goal_status"].append(data)
+                        elif agent_name == "behavior_tracker":
+                            results["behavior_tracker"].append(data)
+                        elif agent_name == "karma_tracker":
+                            results["karmic_tracker"].append(data)
+                        elif agent_name == "financial_strategy":
+                            results["financial_strategy"].append(data)
+
+                return {
+                    "status": "success",
+                    "message": f"Simulation completed for {request.n_months} {request.simulation_unit}",
+                    "user_id": user_id,
+                    "data": results,
+                    "source": "mongodb"
+                }
+
+        # Default response if we couldn't get detailed results
         return {
             "status": "success",
             "message": f"Simulation completed for {request.n_months} {request.simulation_unit}",
@@ -443,7 +661,7 @@ async def pdf_list_endpoint(user_id: str):
 
 def main():
     import uvicorn
-    uvicorn.run("langgraph_api:app", host="0.0.0.0", port=8001, reload=False)
+    uvicorn.run("langgraph_api:app", host="192.168.0.74", port=8000, reload=False)
 
 # If you want to run with `python langgraph_api.py`
 if __name__ == "__main__":

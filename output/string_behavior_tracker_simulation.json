@@ -11,23 +11,57 @@
     },
     {
         "spending_pattern": "spender",
-        "goal_adherence": "off-track",
+        "goal_adherence": "improving",
         "saving_consistency": "inconsistent",
         "labels": [
-            "high-expense-ratio",
-            "impulsive-spender",
-            "stagnant-progress"
+            "making-progress",
+            "improving-financial-habits",
+            "goal-oriented"
+        ],
+        "metadata": {
+            "trend_analysis": {
+                "spending_trend": "insufficient_data",
+                "savings_trend": "insufficient_data",
+                "overall_trend": "needs_improvement"
+            },
+            "improvement_metrics": {
+                "spending_improvement": false,
+                "goal_improvement": true,
+                "savings_improvement": false
+            },
+            "month_number": 2
+        },
+        "progress_notes": [
+            "Continues to show improvement in goal adherence",
+            "Spending habits still need attention"
         ],
         "month": 2
     },
     {
-        "spending_pattern": "spender",
-        "goal_adherence": "off-track",
-        "saving_consistency": "inconsistent",
+        "spending_pattern": "improving_spender",
+        "goal_adherence": "on-track",
+        "saving_consistency": "improving",
         "labels": [
-            "high-expense-ratio",
-            "impulsive-spender",
-            "stagnant-progress"
+            "goal-oriented",
+            "improving-financial-habits",
+            "responsible-spender"
+        ],
+        "metadata": {
+            "trend_analysis": {
+                "spending_trend": "slightly_improving",
+                "savings_trend": "improving",
+                "overall_trend": "improving"
+            },
+            "improvement_metrics": {
+                "spending_improvement": true,
+                "goal_improvement": true,
+                "savings_improvement": true
+            },
+            "month_number": 3
+        },
+        "progress_notes": [
+            "User has shown significant improvement in goal adherence and savings consistency over the past month.",
+            "Spending patterns have improved from spender to improving_spender, indicating a positive trend towards more responsible spending habits."
         ],
         "month": 3
     },
@@ -37,18 +71,25 @@
         "saving_consistency": "inconsistent",
         "labels": [
             "high-expense-ratio",
-            "impulsive-spender",
-            "stagnant-progress"
-        ],
-        "month": 4
-    },
-    {
-        "spending_pattern": "spender",
-        "goal_adherence": "off-track",
-        "saving_consistency": "inconsistent",
-        "labels": [
-            "high-expense-ratio",
             "impulsive-spender"
+        ],
+        "metadata": {
+            "trend_analysis": {
+                "spending_trend": "declining",
+                "savings_trend": "declining",
+                "overall_trend": "declining"
+            },
+            "improvement_metrics": {
+                "spending_improvement": false,
+                "goal_improvement": false,
+                "savings_improvement": false
+            },
+            "month_number": 5
+        },
+        "progress_notes": [
+            "Spending pattern has regressed from saver to spender",
+            "Goal adherence has fallen off-track",
+            "Saving consistency has become inconsistent"
         ],
         "month": 5
     },
@@ -59,6 +100,24 @@
         "labels": [
             "high-expense-ratio",
             "impulsive-spender"
+        ],
+        "metadata": {
+            "trend_analysis": {
+                "spending_trend": "declining",
+                "savings_trend": "declining",
+                "overall_trend": "declining"
+            },
+            "improvement_metrics": {
+                "spending_improvement": false,
+                "goal_improvement": false,
+                "savings_improvement": false
+            },
+            "month_number": 6
+        },
+        "progress_notes": [
+            "Spending pattern remains spender",
+            "Goal adherence remains off-track",
+            "Saving consistency remains inconsistent"
         ],
         "month": 6
     }

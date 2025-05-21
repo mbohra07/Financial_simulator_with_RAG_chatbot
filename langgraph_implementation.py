@@ -768,8 +768,16 @@ def create_financial_simulation_graph():
     return workflow.compile()
 
 # Main simulation function
-def simulate_timeline_langgraph(n_months: int, simulation_unit: str, user_inputs: dict, task_id: str = None):
-    """Run the financial simulation for multiple months using LangGraph."""
+def simulate_timeline_langgraph(n_months: int, simulation_unit: str, user_inputs: dict, task_id: str = None, simulation_id: str = None):
+    """Run the financial simulation for multiple months using LangGraph.
+
+    Args:
+        n_months: Number of months to simulate
+        simulation_unit: Unit of simulation (e.g., "Months")
+        user_inputs: User input data
+        task_id: Optional task ID for status updates
+        simulation_id: Optional simulation ID (if not provided, a new one will be generated)
+    """
     print(f"🚀 Starting LangGraph Financial Simulation for {n_months} {simulation_unit}...")
 
     # Create the workflow graph
@@ -783,8 +791,9 @@ def simulate_timeline_langgraph(n_months: int, simulation_unit: str, user_inputs
     if "user_name" not in user_inputs:
         user_inputs["user_name"] = "Default User"
 
-    # Generate a unique simulation ID
-    simulation_id = generate_simulation_id()
+    # Generate a unique simulation ID if not provided
+    if not simulation_id:
+        simulation_id = generate_simulation_id()
     print(f"📝 Simulation ID: {simulation_id}")
 
     # Save user input to MongoDB

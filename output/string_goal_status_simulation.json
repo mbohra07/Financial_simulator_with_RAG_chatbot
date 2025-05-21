@@ -2,29 +2,11 @@
     {
         "goals": {
             "emergency_fund": {
-                "target": 1000,
-                "current": 800,
-                "status": "behind",
-                "adjustment": "Increase monthly allocation by $50"
-            },
-            "retirement_savings": {
                 "target": 500,
-                "current": 450,
-                "status": "on_track",
-                "adjustment": "Maintain current allocation"
-            },
-            "vacation_fund": {
-                "target": 2000,
-                "current": 1500,
-                "status": "ahead",
-                "adjustment": "Reduce monthly allocation by $25"
+                "progress": 350,
+                "status": "behind",
+                "adjustment": "increase allocation by 10\n      "
             }
-        },
-        "trends": {
-            "overall": "improving",
-            "emergency_fund": "declining",
-            "retirement_savings": "stagnant",
-            "vacation_fund": "improving"
         },
         "month": 1
     },
@@ -32,149 +14,96 @@
         "goals": {
             "emergency_fund": {
                 "target": 1000,
-                "current": 850,
-                "status": "behind",
-                "adjustment": "Increase monthly allocation by $75, consider reducing discretionary spending"
+                "cumulative_progress": 1450,
+                "status": "ahead",
+                "trend": "improving",
+                "adjustment": "Reduce monthly allocation by $10 to avoid over-saving. Consider allocating excess to other goals, such as retirement savings or major purchase."
             },
             "retirement_savings": {
                 "target": 500,
-                "current": 475,
-                "status": "on_track",
-                "adjustment": "Maintain current allocation, consider increasing by 1% in 3 months"
-            },
-            "vacation_fund": {
-                "target": 2000,
-                "current": 1625,
+                "cumulative_progress": 570,
                 "status": "ahead",
-                "adjustment": "Reduce monthly allocation by $15, consider allocating excess to emergency fund"
+                "trend": "improving",
+                "adjustment": "Maintain current allocation and consider increasing by $15 in 2 months to maximize growth. Review investment strategy for optimal returns."
+            },
+            "major_purchase": {
+                "target": 2000,
+                "cumulative_progress": 1900,
+                "status": "on_track",
+                "trend": "improving",
+                "adjustment": "Increase monthly allocation by $30 and review expense categories for optimization. Consider allocating extra funds from emergency fund to major purchase."
             }
         },
         "trends": {
-            "overall": "improving",
-            "emergency_fund": "declining",
+            "emergency_fund": "improving",
             "retirement_savings": "improving",
-            "vacation_fund": "improving"
+            "major_purchase": "improving"
         },
-        "month": 2
+        "month": 4,
+        "recognition": "Congratulations on consistently meeting your savings targets! You're demonstrating exceptional discipline in your financial habits and making great progress toward your goals. Keep up the excellent work!"
     },
     {
         "goals": {
             "emergency_fund": {
                 "target": 1000,
-                "current": 1025,
+                "cumulative_progress": 1630,
                 "status": "ahead",
-                "adjustment": "Reduce monthly allocation by $25, consider allocating excess to retirement savings"
+                "trend": "improving",
+                "adjustment": "Reduce monthly allocation by $20 to avoid over-saving and consider reviewing expense categories for optimization. You've consistently met your emergency fund goals, and it's time to reassess your allocations."
             },
             "retirement_savings": {
                 "target": 500,
-                "current": 490,
-                "status": "on_track",
-                "adjustment": "Maintain current allocation, consider increasing by 1% in 3 months"
-            },
-            "vacation_fund": {
-                "target": 2000,
-                "current": 1985,
+                "cumulative_progress": 620,
                 "status": "ahead",
-                "adjustment": "Reduce monthly allocation by $10, consider allocating excess to emergency fund"
+                "trend": "improving",
+                "adjustment": "Increase allocation by $25 to maximize growth. You've demonstrated discipline in your retirement savings, and it's time to take it to the next level."
+            },
+            "major_purchase": {
+                "target": 2000,
+                "cumulative_progress": 2200,
+                "status": "ahead",
+                "trend": "improving",
+                "adjustment": "Consider allocating excess funds to other goals or reviewing expense categories for optimization. You're consistently meeting your major purchase targets, and it's time to reassess your priorities."
             }
         },
         "trends": {
-            "overall": "improving",
-            "emergency_fund": "improving",
-            "retirement_savings": "on_track",
-            "vacation_fund": "improving"
-        },
-        "month": 3,
-        "reward": "Consistent progress toward all goals! Consider reviewing and adjusting targets in 3 months."
-    },
-    {
-        "goals": {
-            "emergency_fund": {
-                "target": 1025,
-                "progress": 1050,
-                "status": "ahead",
-                "adjustment": "Reduce monthly allocation by $50, consider allocating excess to retirement savings"
-            },
-            "retirement_savings": {
-                "target": 500,
-                "current": 510,
-                "status": "ahead",
-                "adjustment": "Increase monthly allocation by 1%, consider allocating excess to vacation fund"
-            },
-            "vacation_fund": {
-                "target": 2000,
-                "current": 2020,
-                "status": "ahead",
-                "adjustment": "Reduce monthly allocation by $20, consider allocating excess to emergency fund"
-            }
-        },
-        "trends": {
-            "overall": "improving",
             "emergency_fund": "improving",
             "retirement_savings": "improving",
-            "vacation_fund": "improving"
-        },
-        "month": 4,
-        "reward": "Consistent progress toward all goals! Consider reviewing and adjusting targets in 2 months."
-    },
-    {
-        "goals": {
-            "emergency_fund": {
-                "target": 1025,
-                "progress": 1100,
-                "status": "ahead",
-                "adjustment": "Consider allocating excess to retirement savings and review emergency fund target in 2 months"
-            },
-            "retirement_savings": {
-                "target": 500,
-                "current": 520,
-                "status": "ahead",
-                "adjustment": "Increase monthly allocation by 1.5%, consider allocating excess to vacation fund"
-            },
-            "vacation_fund": {
-                "target": 2000,
-                "current": 2050,
-                "status": "ahead",
-                "adjustment": "Reduce monthly allocation by $30, consider allocating excess to emergency fund"
-            }
-        },
-        "trends": {
-            "overall": "improving",
-            "emergency_fund": "improving",
-            "retirement_savings": "improving",
-            "vacation_fund": "improving"
+            "major_purchase": "improving"
         },
         "month": 5,
-        "reward": "Consistent progress toward all goals! Consider reviewing and adjusting targets in 1 month."
+        "recognition": "Outstanding progress toward your financial goals! You've consistently met your targets and demonstrated discipline in your financial habits. Keep up the excellent work!"
     },
     {
         "goals": {
             "emergency_fund": {
-                "target": 1025,
-                "progress": 1150,
+                "target": 1000,
+                "cumulative_progress": 1830,
                 "status": "ahead",
-                "adjustment": "Consider allocating excess to retirement savings and review emergency fund target in 1 month. Explore higher-yield savings options and diversify your savings portfolio."
+                "trend": "improving",
+                "adjustment": "Reduce monthly allocation by $15 to avoid over-saving and consider reviewing expense categories for optimization. You've consistently met your emergency fund goals, and it's time to reassess your allocations. Consider setting a stretch target to further accelerate progress."
             },
             "retirement_savings": {
                 "target": 500,
-                "current": 540,
+                "cumulative_progress": 720,
                 "status": "ahead",
-                "adjustment": "Increase monthly allocation by 2%, consider allocating excess to vacation fund. Review investment opportunities to maximize returns."
+                "trend": "improving",
+                "adjustment": "Increase allocation by $30 to maximize growth. You've consistently met your retirement savings targets, and it's time to take it to the next level. Consider setting a realistic target adjustment to get back on track."
             },
-            "vacation_fund": {
+            "major_purchase": {
                 "target": 2000,
-                "current": 2100,
-                "status": "",
-                "adjustment": "Reduce monthly allocation by $40, consider allocating excess to emergency fund. Review vacation fund target in 2 months."
+                "cumulative_progress": 2500,
+                "status": "ahead",
+                "trend": "improving",
+                "adjustment": "Consider allocating excess funds to other goals or reviewing expense categories for optimization. You're consistently meeting your major purchase targets, and it's time to reassess your priorities. Consider celebrating your progress and reflecting on what's working well for this goal."
             }
         },
         "trends": {
-            "overall": "improving",
             "emergency_fund": "improving",
             "retirement_savings": "improving",
-            "vacation_fund": "improving"
+            "major_purchase": "improving"
         },
         "month": 6,
-        "reward": "Consistent progress toward all goals! You're ahead of target and diversifying your savings. Explore investment opportunities to maximize returns. Review and adjust targets in 1 month."
+        "recognition": "Outstanding progress toward your financial goals! You've consistently met your targets and demonstrated discipline in your financial habits. Keep up the excellent work! Consider celebrating your progress and reflecting on what's working well for each goal."
     }
 ]
