@@ -1,0 +1,25 @@
+[
+    {
+        "goals": {
+            "emergency_fund": {
+                "target": 1000,
+                "cumulative_progress": 800,
+                "trend": "behind",
+                "adjustment": "Increase monthly allocation by 5% to get back on track"
+            },
+            "retirement_savings": {
+                "target": 500,
+                "cumulative_progress": 420,
+                "trend": "stagnant",
+                "adjustment": "Review investment options to optimize returns"
+            },
+            "vacation_fund": {
+                "target": 2000,
+                "cumulative_progress": 1800,
+                "trend": "ahead",
+                "adjustment": "Maintain current allocation and consider increasing target"
+            }
+        },
+        "month": 1
+    }
+]

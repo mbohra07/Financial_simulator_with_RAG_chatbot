@@ -1,0 +1,22 @@
+[
+    {
+        "recommendations": [
+            {
+                "title": "Optimize Emergency Fund",
+                "description": "Increase savings rate by 5% to reach 3-6 months' expenses in the next 6 months.",
+                "reasoning": "User's cash flow shows a consistent income, but the emergency fund is below target. Increasing the savings rate will help build a cushion against unexpected expenses."
+            },
+            {
+                "title": "Reduce Dining Out Expenses",
+                "description": "Reduce dining out expenses by 20% to free up $200/month for savings and debt repayment.",
+                "reasoning": "User's behavior result indicates overspending in dining out, which can be optimized to allocate funds towards savings and debt repayment."
+            },
+            {
+                "title": "Rebalance Investment Portfolio",
+                "description": "Rebalance investment portfolio to maintain a 60% stock and 40% bond allocation to minimize risk and maximize returns.",
+                "reasoning": "User's goal tracking result shows a high-risk investment portfolio, which can be optimized to minimize risk and maximize returns."
+            }
+        ],
+        "month": 1
+    }
+]

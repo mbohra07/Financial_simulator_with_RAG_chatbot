@@ -1,0 +1,12 @@
+[
+    {
+        "spending_pattern": "spender",
+        "goal_adherence": "off-track",
+        "saving_consistency": "inconsistent",
+        "labels": [
+            "high-expense-ratio",
+            "impulsive-spender"
+        ],
+        "month": 1
+    }
+]

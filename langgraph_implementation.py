@@ -2,14 +2,16 @@
 LangGraph implementation of the Financial Crew simulation system.
 This replaces the CrewAI implementation in crew.py.
 Integrated with MongoDB Atlas for persistent storage and learning from past simulations.
+Enhanced with Redis for caching, session management, and rate limiting.
 """
 
 from typing import Dict, List, Any, TypedDict, Annotated, Literal, Optional, Union
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 import uuid
+import redis
 
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -50,9 +52,124 @@ from database.mongodb_client import (
 # Load environment variables
 load_dotenv()
 
+# Initialize Redis client
+redis_client = redis.Redis(
+    host=os.getenv("REDIS_HOST", "localhost"),
+    port=int(os.getenv("REDIS_PORT", 6379)),
+    password=os.getenv("REDIS_PASSWORD", ""),
+    decode_responses=True  # Automatically decode responses to strings
+)
+
+# Redis utility functions
+def redis_cache_get(key, namespace="financial_crew"):
+    """Get data from Redis cache."""
+    try:
+        full_key = f"{namespace}:{key}"
+        data = redis_client.get(full_key)
+        if data:
+            return json.loads(data)
+        return None
+    except Exception as e:
+        print(f"Redis cache get error: {e}")
+        return None
+
+def redis_cache_set(key, value, expiry=3600, namespace="financial_crew"):
+    """Set data in Redis cache with expiry in seconds."""
+    try:
+        full_key = f"{namespace}:{key}"
+        redis_client.setex(full_key, expiry, json.dumps(value))
+        return True
+    except Exception as e:
+        print(f"Redis cache set error: {e}")
+        return False
+
+def redis_cache_delete(key, namespace="financial_crew"):
+    """Delete data from Redis cache."""
+    try:
+        full_key = f"{namespace}:{key}"
+        return bool(redis_client.delete(full_key))
+    except Exception as e:
+        print(f"Redis cache delete error: {e}")
+        return False
+
+def redis_rate_limit(key, limit=100, window=60, namespace="rate_limits"):
+    """
+    Check if a key is rate limited.
+
+    Args:
+        key (str): Identifier for the client (e.g., IP address, user ID)
+        limit (int): Maximum number of requests allowed in the time window
+        window (int): Time window in seconds
+        namespace (str): Redis namespace
+
+    Returns:
+        tuple: (is_limited, remaining, reset_time)
+    """
+    try:
+        # Get the current timestamp
+        current_time = int(time.time())
+
+        # Create a key with the current window
+        window_start = current_time - (current_time % window)
+        window_key = f"{namespace}:{key}:{window_start}"
+
+        # Get the current count
+        count = int(redis_client.get(window_key) or 0)
+
+        # Check if rate limited
+        is_limited = count >= limit
+
+        # Increment the counter if not rate limited
+        if not is_limited:
+            # Use pipeline to ensure atomic operations
+            pipe = redis_client.pipeline()
+            pipe.incr(window_key)
+            # Set expiry if it doesn't exist
+            pipe.expire(window_key, window)
+            pipe.execute()
+            count += 1
+
+        # Calculate remaining requests and reset time
+        remaining = max(0, limit - count)
+        reset_time = window_start + window - current_time
+
+        return is_limited, remaining, reset_time
+    except Exception as e:
+        print(f"Redis rate limit error: {e}")
+        # On error, allow the request to proceed
+        return False, limit, window
+
 # Initialize LLM
+from litellm import Cache
+
 def get_llm(model_name="groq/llama3-70b-8192"):
-    """Get the LLM based on model name."""
+    """Get the LLM with caching enabled."""
+    # Use Redis for caching but with langchain's built-in caching
+    from langchain_community.cache import RedisCache
+    from langchain.globals import set_llm_cache
+
+    # Initialize Redis cache for LangChain
+    redis_host = os.getenv("REDIS_HOST", "localhost")
+    redis_port = os.getenv("REDIS_PORT", "6379")
+    redis_password = os.getenv("REDIS_PASSWORD", "")
+
+    # Import Redis client
+    import redis
+
+    # Create Redis client
+    redis_client = redis.Redis(
+        host=redis_host,
+        port=int(redis_port),
+        password=redis_password,
+        decode_responses=True
+    )
+
+    # Initialize Redis cache with client
+    redis_cache = RedisCache(redis_=redis_client)
+
+    # Set the cache globally
+    set_llm_cache(redis_cache)
+
     if model_name.startswith("groq/"):
         return ChatGroq(
             model_name=model_name.replace("groq/", ""),
@@ -1251,8 +1368,7 @@ Your role is to develop financial strategies that demonstrate progressive learni
 
 # Define the LangGraph workflow
 def create_financial_simulation_graph():
-    """Create the financial simulation workflow graph."""
-    # Create the graph
+    """Create the financial simulation workflow with adaptive scenarios."""
     workflow = StateGraph(FinancialSimulationState)
 
     # Add nodes
@@ -1278,7 +1394,7 @@ def create_financial_simulation_graph():
     return workflow.compile()
 
 # Main simulation function
-def simulate_timeline_langgraph(n_months: int, simulation_unit: str, user_inputs: dict, task_id: str = None, simulation_id: str = None):
+def simulate_timeline_langgraph(n_months: int, simulation_unit: str, user_inputs: dict, task_id: str = None, simulation_id: str = None, use_cache: bool = True):
     """Run the financial simulation for multiple months using LangGraph.
 
     Args:
@@ -1287,6 +1403,7 @@ def simulate_timeline_langgraph(n_months: int, simulation_unit: str, user_inputs
         user_inputs: User input data
         task_id: Optional task ID for status updates
         simulation_id: Optional simulation ID (if not provided, a new one will be generated)
+        use_cache: Whether to use Redis cache for simulation results (default: True)
     """
     print(f"🚀 Starting LangGraph Financial Simulation for {n_months} {simulation_unit}...")
 
@@ -1305,6 +1422,30 @@ def simulate_timeline_langgraph(n_months: int, simulation_unit: str, user_inputs
     if not simulation_id:
         simulation_id = generate_simulation_id()
     print(f"📝 Simulation ID: {simulation_id}")
+
+    # Check if simulation results are already in Redis cache
+    if use_cache:
+        cache_key = f"simulation:{simulation_id}"
+        cached_results = redis_cache_get(cache_key)
+        if cached_results and len(cached_results.get("months", [])) >= n_months:
+            print(f"🔄 Using cached simulation results for simulation_id: {simulation_id}")
+            return cached_results
+
+    # Initialize cache structure if using cache
+    if use_cache:
+        redis_cache_set(
+            f"simulation:{simulation_id}",
+            {
+                "simulation_id": simulation_id,
+                "user_inputs": user_inputs,
+                "n_months": n_months,
+                "simulation_unit": simulation_unit,
+                "status": "running",
+                "start_time": time.time(),
+                "months": []
+            },
+            expiry=86400  # Cache for 24 hours
+        )
 
     # Save user input to MongoDB
     save_user_input(user_inputs, simulation_id)
@@ -1395,20 +1536,65 @@ def simulate_timeline_langgraph(n_months: int, simulation_unit: str, user_inputs
         # Run the workflow
         try:
             # Execute the workflow directly instead of streaming
-            _ = workflow.invoke(initial_state)  # Using _ to ignore unused variable
+            result = workflow.invoke(initial_state)
+
+            # Get the final state with all results
+            final_state = result
 
             # Generate monthly reflection report
-            user_name = user_inputs["user_name"]
             user_id = user_inputs["user_id"]
             # Use user_id for file naming consistency
             assign_persona(user_id, month)
             generate_monthly_reflection_report(user_id, month)
             print(f"📝 Generated monthly reflection report for user_id: {user_id}, month: {month}")
 
+            # Cache the month's results in Redis if using cache
+            if use_cache:
+                # Get current cache
+                cache_key = f"simulation:{simulation_id}"
+                cached_data = redis_cache_get(cache_key) or {
+                    "simulation_id": simulation_id,
+                    "user_inputs": user_inputs,
+                    "n_months": n_months,
+                    "simulation_unit": simulation_unit,
+                    "status": "running",
+                    "start_time": time.time(),
+                    "months": []
+                }
+
+                # Add this month's results
+                month_data = {
+                    "month": month,
+                    "cashflow_result": final_state.get("cashflow_result"),
+                    "discipline_result": final_state.get("discipline_result"),
+                    "goal_tracking_result": final_state.get("goal_tracking_result"),
+                    "behavior_result": final_state.get("behavior_result"),
+                    "karma_result": final_state.get("karma_result"),
+                    "financial_strategy_result": final_state.get("financial_strategy_result"),
+                    "economic_context": final_state.get("economic_context"),
+                    "market_context": final_state.get("market_context")
+                }
+
+                # Add to months array
+                cached_data["months"].append(month_data)
+
+                # Update cache
+                redis_cache_set(cache_key, cached_data, expiry=86400)  # Cache for 24 hours
+
             print(f"✅ Month {month} simulation completed successfully")
 
         except Exception as e:
             print(f"❌ Error in month {month} simulation: {e}")
+
+            # Update cache with error status if using cache
+            if use_cache:
+                cache_key = f"simulation:{simulation_id}"
+                cached_data = redis_cache_get(cache_key)
+                if cached_data:
+                    cached_data["error"] = str(e)
+                    cached_data["status"] = "error"
+                    redis_cache_set(cache_key, cached_data, expiry=86400)
+
             import traceback
             traceback.print_exc()
 
@@ -1417,7 +1603,21 @@ def simulate_timeline_langgraph(n_months: int, simulation_unit: str, user_inputs
             print(f"⏳ Waiting before starting next month simulation...")
             time.sleep(15)
 
+    # Update final status in cache if using cache
+    if use_cache:
+        cache_key = f"simulation:{simulation_id}"
+        cached_data = redis_cache_get(cache_key)
+        if cached_data:
+            cached_data["status"] = "completed"
+            cached_data["end_time"] = time.time()
+            cached_data["duration"] = cached_data["end_time"] - cached_data["start_time"]
+            redis_cache_set(cache_key, cached_data, expiry=86400)
+
     print(f"🎉 Financial simulation completed for {n_months} {simulation_unit}")
+
+    # Return the cached data if using cache, otherwise return True
+    if use_cache:
+        return redis_cache_get(f"simulation:{simulation_id}")
     return True
 
 # For testing

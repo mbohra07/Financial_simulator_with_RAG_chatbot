@@ -1,0 +1,15 @@
+[
+    {
+        "financial_discipline_score": 0.7,
+        "improvement_areas": [
+            "reduce_unnecessary_debt"
+        ],
+        "recommended_actions": [
+            "review_expenses",
+            "adjust_budget"
+        ],
+        "historical_trend": "improving",
+        "next_month_target": 0.8,
+        "month": 1
+    }
+]
