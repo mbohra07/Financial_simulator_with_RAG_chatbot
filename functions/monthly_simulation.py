@@ -152,9 +152,37 @@ def generate_monthly_reflection_report(user_name, month):
     return report
 
 def assign_persona(user_name, month):
-    karma_data = load_json('output/karmic_tracker_simulation.json')
-    behavior_data = load_json('output/behavior_tracker_simulation.json')
-    history_data = load_json('data/persona_history.json')
+    # Try to load karma data with user prefix
+    karma_file = f'output/{user_name}_karmic_tracker_simulation.json'
+    if os.path.exists(karma_file):
+        karma_data = load_json(karma_file)
+    else:
+        # Fallback to non-prefixed file
+        fallback_karma_file = 'output/karmic_tracker_simulation.json'
+        if os.path.exists(fallback_karma_file):
+            karma_data = load_json(fallback_karma_file)
+        else:
+            karma_data = []
+
+    # Try to load behavior data with user prefix
+    behavior_file = f'output/{user_name}_behavior_tracker_simulation.json'
+    if os.path.exists(behavior_file):
+        behavior_data = load_json(behavior_file)
+    else:
+        # Fallback to non-prefixed file
+        fallback_behavior_file = 'output/behavior_tracker_simulation.json'
+        if os.path.exists(fallback_behavior_file):
+            behavior_data = load_json(fallback_behavior_file)
+        else:
+            behavior_data = []
+
+    # Try to load user-specific person_history file first
+    user_history_path = f'data/{user_name}_person_history.json'
+    if os.path.exists(user_history_path):
+        history_data = load_json(user_history_path)
+    else:
+        # If not found, create a new empty list
+        history_data = []
 
     # Extract average karma score for the month
     karmic_scores = [entry.get('traits', {}).get('karma_score', 0) for entry in karma_data if entry.get('user_name') == user_name and entry.get('month') == month]
@@ -179,7 +207,17 @@ def assign_persona(user_name, month):
         "change_flag": change_flag
     }
 
-    history_data.append(record)
+    # Check if an entry for this month already exists
+    existing_entry_index = next((i for i, entry in enumerate(history_data) if entry.get('month') == month), None)
+
+    if existing_entry_index is not None:
+        # Update existing entry
+        history_data[existing_entry_index] = record
+        print(f"🔄 Updated existing persona history entry for month {month}")
+    else:
+        # Append new entry
+        history_data.append(record)
+        print(f"➕ Added new persona history entry for month {month}")
 
     # Save with user_id prefix only - use person_history for consistency with API
     persona_history_path = f'data/{user_name}_person_history.json'
