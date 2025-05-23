@@ -85,38 +85,87 @@ class TeacherResponse(BaseModel):
     status: Optional[str] = None
 
 def run_teacher_agent_background(task_id: str, user_id: str, query: str, chat_history: List[Dict[str, str]], pdf_id: Union[str, List[str], None] = None):
-    """Background task to run the teacher agent"""
+    """Background task to run the teacher agent with MongoDB Atlas Vector Search"""
     try:
         # Update task status to running
         teacher_tasks[task_id]["status"] = "running"
 
         print(f"🚀 Running teacher agent in background - task_id: {task_id}, user_id: {user_id}")
 
-        # Run the teacher agent
-        result = run_teacher_agent(
-            user_query=query,
-            user_id=user_id,
-            chat_history=chat_history,
-            pdf_id=pdf_id
-        )
+        # Check if MongoDB is available
+        from database.mongodb_client import USE_MOCK_DB
+        if USE_MOCK_DB:
+            error_msg = "MongoDB Atlas connection is required for vector search functionality."
+            error_message = f"I'm sorry, but MongoDB Atlas is required to process your question. Please contact the administrator."
 
-        # Ensure we have a valid response
-        response = result.get("response")
-        if not response:
-            response = "I'm sorry, I couldn't generate a response to your question."
-            result["response"] = response
+            teacher_tasks[task_id]["status"] = "failed"
+            teacher_tasks[task_id]["error"] = error_msg
+            teacher_tasks[task_id]["response"] = error_message
+            teacher_tasks[task_id]["chat_history"] = chat_history + [
+                {"role": "user", "content": query},
+                {"role": "assistant", "content": error_message}
+            ]
 
-        # Save the response and chat history
-        teacher_tasks[task_id]["response"] = response
-        teacher_tasks[task_id]["chat_history"] = result.get("chat_history", [])
+            # Save the error message to the database
+            try:
+                save_chat_message(user_id, "user", query)
+                save_chat_message(user_id, "assistant", error_message)
+            except Exception:
+                pass  # Ignore database errors at this point
 
-        # Save the new messages to the database
-        save_chat_message(user_id, "user", query)
-        save_chat_message(user_id, "assistant", response)
+            print(f"❌ {error_msg}")
+            return
 
-        # Update task status
-        teacher_tasks[task_id]["status"] = "completed"
-        print(f"✅ Teacher agent task completed - task_id: {task_id}")
+        try:
+            # Run the teacher agent
+            result = run_teacher_agent(
+                user_query=query,
+                user_id=user_id,
+                chat_history=chat_history,
+                pdf_id=pdf_id
+            )
+
+            # Ensure we have a valid response
+            response = result.get("response")
+            if not response:
+                response = "I'm sorry, I couldn't generate a response to your question."
+                result["response"] = response
+
+            # Save the response and chat history
+            teacher_tasks[task_id]["response"] = response
+            teacher_tasks[task_id]["chat_history"] = result.get("chat_history", [])
+
+            # Save the new messages to the database
+            save_chat_message(user_id, "user", query)
+            save_chat_message(user_id, "assistant", response)
+
+            # Update task status
+            teacher_tasks[task_id]["status"] = "completed"
+            print(f"✅ Teacher agent task completed - task_id: {task_id}")
+
+        except ValueError as ve:
+            if "MongoDB" in str(ve):
+                error_msg = str(ve)
+                error_message = f"I'm sorry, but MongoDB Atlas is required to process your question. Please contact the administrator."
+
+                teacher_tasks[task_id]["status"] = "failed"
+                teacher_tasks[task_id]["error"] = error_msg
+                teacher_tasks[task_id]["response"] = error_message
+                teacher_tasks[task_id]["chat_history"] = chat_history + [
+                    {"role": "user", "content": query},
+                    {"role": "assistant", "content": error_message}
+                ]
+
+                # Save the error message to the database
+                try:
+                    save_chat_message(user_id, "user", query)
+                    save_chat_message(user_id, "assistant", error_message)
+                except Exception:
+                    pass  # Ignore database errors at this point
+
+                print(f"❌ {error_msg}")
+            else:
+                raise
 
     except Exception as e:
         error_message = f"I'm sorry, but there was an error processing your question: {str(e)}"
@@ -482,7 +531,7 @@ async def learning_endpoint(
     query: TeacherQuery,
     background_tasks: BackgroundTasks
 ):
-    """Process a learning query from the user and return a response from the teacher agent"""
+    """Process a learning query from the user and return a response from the teacher agent using MongoDB Atlas Vector Search"""
     try:
         actual_user_id = query.user_id
         actual_query = query.query
@@ -490,6 +539,18 @@ async def learning_endpoint(
         actual_wait = query.wait
 
         print(f"📥 Received learning request - user_id: {actual_user_id}, query: '{actual_query}'")
+
+        # Check if MongoDB is available
+        from database.mongodb_client import USE_MOCK_DB
+        if USE_MOCK_DB:
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "status": "error",
+                    "message": "MongoDB Atlas connection is required for vector search functionality.",
+                    "requires_mongodb_atlas": True
+                }
+            )
 
         # Get chat history from database but limit to last 10 messages to avoid overwhelming context
         from database.mongodb_client import get_chat_history_for_user
@@ -531,26 +592,39 @@ async def learning_endpoint(
         if actual_wait:
             # Run the teacher agent synchronously
             print(f"⏱️ Running teacher agent synchronously - task_id: {task_id}")
-            result = run_teacher_agent(
-                user_query=current_query,
-                user_id=actual_user_id,
-                chat_history=formatted_chat_history,
-                pdf_id=pdf_id_param
-            )
+            try:
+                result = run_teacher_agent(
+                    user_query=current_query,
+                    user_id=actual_user_id,
+                    chat_history=formatted_chat_history,
+                    pdf_id=pdf_id_param
+                )
 
-            # Log the response
-            print(f"✅ Teacher agent response: '{result['response'][:50]}...'")
+                # Log the response
+                print(f"✅ Teacher agent response: '{result['response'][:50]}...'")
 
-            # Save the new messages to the database
-            save_chat_message(actual_user_id, "user", current_query)
-            save_chat_message(actual_user_id, "assistant", result["response"])
+                # Save the new messages to the database
+                save_chat_message(actual_user_id, "user", current_query)
+                save_chat_message(actual_user_id, "assistant", result["response"])
 
-            return TeacherResponse(
-                response=result["response"],
-                chat_history=result["chat_history"],
-                learning_task_id=task_id,  # Only use learning_task_id for clarity
-                status="completed"
-            )
+                return TeacherResponse(
+                    response=result["response"],
+                    chat_history=result["chat_history"],
+                    learning_task_id=task_id,  # Only use learning_task_id for clarity
+                    status="completed"
+                )
+            except ValueError as ve:
+                if "MongoDB" in str(ve):
+                    return JSONResponse(
+                        status_code=400,
+                        content={
+                            "status": "error",
+                            "message": str(ve),
+                            "requires_mongodb_atlas": True
+                        }
+                    )
+                else:
+                    raise
         else:
             # Run the teacher agent in the background
             print(f"🔄 Running teacher agent in background - task_id: {task_id}")
@@ -622,7 +696,7 @@ async def pdf_upload_endpoint(
     user_id: str = Form(...),
     pdf_file: UploadFile = File(...)
 ):
-    """Upload a PDF file for the teacher agent to use in explanations"""
+    """Upload a PDF file for the teacher agent to use in explanations with MongoDB Atlas Vector Search"""
     try:
         # Create temp directory if it doesn't exist
         temp_dir = Path("temp_pdfs")
@@ -645,13 +719,24 @@ async def pdf_upload_endpoint(
                 "chunk_count": result.get("chunk_count", 0)
             }
         else:
-            return JSONResponse(
-                status_code=400,
-                content={
-                    "status": "error",
-                    "message": result["message"]
-                }
-            )
+            # Return a more specific error message for MongoDB Atlas requirement
+            if "MongoDB Atlas" in result["message"]:
+                return JSONResponse(
+                    status_code=400,
+                    content={
+                        "status": "error",
+                        "message": result["message"],
+                        "requires_mongodb_atlas": True
+                    }
+                )
+            else:
+                return JSONResponse(
+                    status_code=400,
+                    content={
+                        "status": "error",
+                        "message": result["message"]
+                    }
+                )
     except Exception as e:
         print(f"❌ Error in PDF upload: {e}")
         import traceback
@@ -729,7 +814,7 @@ async def pdf_list_endpoint(user_id: str):
 
 def main():
     import uvicorn
-    uvicorn.run("langgraph_api:app", host="192.168.3.104", port=8000, reload=False)
+    uvicorn.run("langgraph_api:app", host="192.168.0.86", port=8000, reload=False)
 
 # If you want to run with `python langgraph_api.py`
 if __name__ == "__main__":

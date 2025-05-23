@@ -91,6 +91,7 @@ class TeacherAgentState(TypedDict):
     pdf_path: Optional[str]
     pdf_id: Optional[Union[str, List[str]]]  # PDF ID(s) for specific PDF searches
     pdf_content: Optional[List[Document]]
+    pdf_metadata: Optional[Dict[str, Any]]  # Metadata for the current PDF
 
     # Vector search results
     vector_search_results: Optional[List[Document]]
@@ -128,17 +129,12 @@ def vectorize_and_store_pdf(documents: List[Document], user_id: str, pdf_name: s
         pdf_name: Name of the PDF file
 
     Returns:
-        PDF ID if successful, empty string otherwise
+        PDF ID if successful, raises ValueError otherwise
     """
     try:
-        # Check if numpy is available
-        try:
-            import numpy as np
-            print("✅ NumPy is available, version:", np.__version__)
-        except ImportError:
-            print("❌ NumPy is not available, attempting to use alternative approach")
-            # Store documents directly without vectorization
-            return store_pdf_content_without_vectors(documents, user_id, pdf_name)
+        # Import numpy - required for vector operations
+        import numpy as np
+        print("✅ NumPy is available, version:", np.__version__)
 
         # Generate a unique PDF ID
         pdf_id = f"pdf_{user_id}_{str(uuid.uuid4())[:8]}"
@@ -148,8 +144,8 @@ def vectorize_and_store_pdf(documents: List[Document], user_id: str, pdf_name: s
 
         # Get MongoDB client
         if USE_MOCK_DB:
-            print("⚠️ Using mock DB, PDF vectorization not available")
-            return ""
+            print("❌ MongoDB connection not available. Vector database requires MongoDB Atlas.")
+            raise ValueError("MongoDB connection not available. Cannot proceed with vector storage.")
 
         # Get MongoDB database
         db = get_database()
@@ -208,7 +204,7 @@ def vectorize_and_store_pdf(documents: List[Document], user_id: str, pdf_name: s
                         print(f"❌ Error inserting document {i+j}: {e2}")
             except Exception as e:
                 print(f"❌ Error processing batch: {e}")
-                # Fall back to individual processing
+                # Process documents individually as a fallback for this batch only
                 for j, doc in enumerate(batch):
                     try:
                         # Get embedding for document
@@ -232,78 +228,23 @@ def vectorize_and_store_pdf(documents: List[Document], user_id: str, pdf_name: s
         print(f"✅ Successfully inserted {successful_insertions}/{len(documents)} documents")
         print(f"✅ Verified {count} documents in vector store for PDF ID: {pdf_id}")
 
+        # If we didn't insert any documents successfully, raise an error
+        if successful_insertions == 0:
+            raise ValueError("Failed to insert any documents into vector database")
+
         print(f"✅ Successfully stored PDF with ID: {pdf_id}")
         return pdf_id
     except Exception as e:
         print(f"❌ Error vectorizing PDF: {e}")
         import traceback
         traceback.print_exc()
-        # Try alternative approach
-        return store_pdf_content_without_vectors(documents, user_id, pdf_name)
+        raise ValueError(f"Failed to vectorize and store PDF: {str(e)}")
 
-def store_pdf_content_without_vectors(documents: List[Document], user_id: str, pdf_name: str) -> str:
-    """
-    Store PDF content directly in MongoDB without vectorization.
 
-    Args:
-        documents: List of document chunks from the PDF
-        user_id: User identifier
-        pdf_name: Name of the PDF file
-
-    Returns:
-        PDF ID if successful, empty string otherwise
-    """
-    try:
-        print("📄 Storing PDF content without vectorization")
-
-        # Generate a unique PDF ID
-        pdf_id = f"pdf_{user_id}_{str(uuid.uuid4())[:8]}"
-
-        # Get MongoDB client
-        if USE_MOCK_DB:
-            print("⚠️ Using mock DB, PDF storage not available")
-            return ""
-
-        # Get MongoDB database
-        db = get_database()
-        collection = db["pdf_content"]
-
-        # Store PDF metadata
-        pdf_metadata = {
-            "pdf_id": pdf_id,
-            "user_id": user_id,
-            "pdf_name": pdf_name,
-            "timestamp": datetime.now().isoformat(),
-            "chunk_count": len(documents)
-        }
-
-        # Store in PDF metadata collection
-        db["pdf_metadata"].insert_one(pdf_metadata)
-
-        # Store documents
-        for i, doc in enumerate(documents):
-            # Create document
-            document = {
-                "user_id": user_id,
-                "pdf_id": pdf_id,
-                "chunk_id": f"{pdf_id}_{i}",
-                "page_content": doc.page_content,
-                "metadata": doc.metadata,
-                "timestamp": datetime.now().isoformat()
-            }
-
-            # Insert into MongoDB
-            collection.insert_one(document)
-
-        print(f"✅ Successfully stored {len(documents)} PDF pages with ID: {pdf_id}")
-        return pdf_id
-    except Exception as e:
-        print(f"❌ Error storing PDF content: {e}")
-        return ""
 
 def search_vector_db(query: str, user_id: str, k: int = 5, pdf_id: Union[str, List[str]] = None) -> List[Document]:
     """
-    Search the vector database for relevant documents.
+    Search the vector database for relevant documents using direct MongoDB aggregation.
 
     Args:
         query: The search query
@@ -315,21 +256,17 @@ def search_vector_db(query: str, user_id: str, k: int = 5, pdf_id: Union[str, Li
         List of relevant documents
     """
     try:
-        # Check if numpy is available
-        try:
-            import numpy
-            print("✅ Using vector search")
-        except ImportError:
-            print("❌ NumPy is not available, falling back to direct content search")
-            return search_pdf_content_without_vectors(query, user_id, k, pdf_id)
+        # Import numpy - required for vector operations
+        import numpy as np
+        print("✅ Using vector search with MongoDB Atlas")
 
         # Initialize embeddings
         embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
 
         # Get MongoDB client
         if USE_MOCK_DB:
-            print("⚠️ Using mock DB, vector search not available")
-            return []
+            print("❌ MongoDB connection not available. Vector search requires MongoDB Atlas.")
+            raise ValueError("MongoDB connection not available. Cannot perform vector search.")
 
         # Get MongoDB database
         db = get_database()
@@ -341,42 +278,92 @@ def search_vector_db(query: str, user_id: str, k: int = 5, pdf_id: Union[str, Li
                 # Multiple PDF IDs
                 if len(pdf_id) > 0:
                     # Search with user_id and multiple pdf_ids filter
-                    pre_filter = {
+                    filter_dict = {
                         "metadata.user_id": user_id,
                         "metadata.pdf_id": {"$in": pdf_id}
                     }
                     print(f"🔍 Searching for multiple PDF IDs: {', '.join(pdf_id)}")
                 else:
                     # Empty list, fall back to user_id filter only
-                    pre_filter = {"metadata.user_id": user_id}
+                    filter_dict = {"metadata.user_id": user_id}
                     print(f"🔍 Searching all PDFs for user: {user_id}")
             else:
                 # Single PDF ID
-                pre_filter = {"metadata.user_id": user_id, "metadata.pdf_id": pdf_id}
+                filter_dict = {"metadata.user_id": user_id, "metadata.pdf_id": pdf_id}
                 print(f"🔍 Searching for PDF ID: {pdf_id}")
         else:
             # Search with user_id filter only
-            pre_filter = {"metadata.user_id": user_id}
+            filter_dict = {"metadata.user_id": user_id}
             print(f"🔍 Searching all PDFs for user: {user_id}")
 
         # Check if documents exist for this filter
-        doc_count = collection.count_documents(pre_filter)
+        doc_count = collection.count_documents(filter_dict)
         print(f"📊 Found {doc_count} documents matching filter criteria")
 
         if doc_count == 0:
             print("⚠️ No documents found matching filter criteria")
             return []
 
-        # Direct vector similarity search - most reliable method
-        print(f"🔍 Performing direct vector similarity search...")
-
+        # Try direct MongoDB Atlas Vector Search using aggregation pipeline
         try:
+            print("🔍 Using MongoDB Atlas Vector Search with direct aggregation...")
+
+            # Generate embedding for query
+            query_embedding = embeddings.embed_query(query)
+
+            # Create aggregation pipeline
+            pipeline = [
+                {
+                    "$vectorSearch": {
+                        "index": "pdf_vector_index",
+                        "path": "embedding",
+                        "queryVector": query_embedding,
+                        "numCandidates": k * 10,  # Get more candidates for better results
+                        "limit": k * 2  # Get more results to filter
+                    }
+                },
+                {
+                    "$match": filter_dict
+                },
+                {
+                    "$limit": k
+                },
+                {
+                    "$project": {
+                        "_id": 0,
+                        "page_content": 1,
+                        "metadata": 1,
+                        "score": {"$meta": "vectorSearchScore"}
+                    }
+                }
+            ]
+
+            # Execute aggregation
+            results_cursor = collection.aggregate(pipeline)
+            results_list = list(results_cursor)
+
+            print(f"✅ MongoDB Atlas Vector Search completed with {len(results_list)} results")
+
+            # Convert to Document objects
+            results = []
+            for doc in results_list:
+                results.append(Document(
+                    page_content=doc.get("page_content", ""),
+                    metadata=doc.get("metadata", {})
+                ))
+
+            return results
+
+        except Exception as e:
+            print(f"⚠️ MongoDB Atlas Vector Search failed: {e}")
+            print("🔍 Falling back to direct vector similarity calculation...")
+
             # Get query embedding
             query_embedding = embeddings.embed_query(query)
 
             # Get all documents matching filter
-            matching_docs = list(collection.find(pre_filter))
-            print(f"� Retrieved {len(matching_docs)} documents for processing")
+            matching_docs = list(collection.find(filter_dict))
+            print(f"📄 Retrieved {len(matching_docs)} documents for processing")
 
             # Calculate cosine similarity manually
             from numpy import dot
@@ -411,240 +398,108 @@ def search_vector_db(query: str, user_id: str, k: int = 5, pdf_id: Union[str, Li
                     metadata=doc.get("metadata", {})
                 ))
 
-            print(f"✅ Found {len(results)} relevant documents using vector similarity")
-
-            # If we got results, return them
-            if results:
-                return results
-
-            # If no results from direct vector search, try using the vector store
-            print("⚠️ No results from direct vector search, trying vector store...")
-
-            # Create vector store
-            vector_store = MongoDBAtlasVectorSearch(
-                collection,
-                embeddings,
-                index_name="pdf_vector_index"
-            )
-
-            # Search with filter
-            results = vector_store.similarity_search(
-                query,
-                k=k,
-                pre_filter=pre_filter
-            )
-
-            print(f"✅ Vector store search completed with {len(results)} results")
+            print(f"✅ Found {len(results)} relevant documents using direct vector similarity")
             return results
 
-        except Exception as e:
-            print(f"❌ Error in vector search: {e}")
-            import traceback
-            traceback.print_exc()
-
-            # Try using the vector store as fallback
-            try:
-                print("⚠️ Trying vector store as fallback...")
-
-                # Create vector store
-                vector_store = MongoDBAtlasVectorSearch(
-                    collection,
-                    embeddings,
-                    index_name="pdf_vector_index"
-                )
-
-                # Search with filter
-                results = vector_store.similarity_search(
-                    query,
-                    k=k,
-                    pre_filter=pre_filter
-                )
-
-                print(f"✅ Vector store search completed with {len(results)} results")
-                return results
-            except Exception as e2:
-                print(f"❌ Error in vector store fallback: {e2}")
-                # Return empty results
-                return []
-
-        print(f"✅ Found {len(results)} relevant PDF pages using vector search")
-        return results
     except Exception as e:
         print(f"❌ Error searching vector DB: {e}")
         import traceback
         traceback.print_exc()
-        # Try alternative approach
-        return search_pdf_content_without_vectors(query, user_id, k, pdf_id)
-
-def search_pdf_content_without_vectors(query: str, user_id: str, k: int = 5, pdf_id: Union[str, List[str]] = None) -> List[Document]:
-    """
-    Search PDF content directly without using vectors.
-
-    Args:
-        query: The search query
-        user_id: User identifier
-        k: Number of results to return
-        pdf_id: Optional PDF ID or list of PDF IDs to filter by
-
-    Returns:
-        List of relevant documents
-    """
-    try:
-        print("🔍 Searching PDF content without vectors")
-
-        # Get MongoDB client
-        if USE_MOCK_DB:
-            print("⚠️ Using mock DB, PDF content search not available")
-            return []
-
-        # Get MongoDB database
-        db = get_database()
-        collection = db["pdf_content"]
-
-        # Simple text search (not as effective as vector search)
-        # Split query into words for basic keyword matching
-        keywords = query.lower().split()
-
-        # Build filter
-        if pdf_id:
-            if isinstance(pdf_id, list):
-                # Multiple PDF IDs
-                if len(pdf_id) > 0:
-                    # Get documents for this user and multiple PDFs
-                    filter_query = {"user_id": user_id, "pdf_id": {"$in": pdf_id}}
-                    print(f"🔍 Searching for multiple PDF IDs: {', '.join(pdf_id)}")
-                else:
-                    # Empty list, fall back to user_id filter only
-                    filter_query = {"user_id": user_id}
-                    print(f"🔍 Searching all PDFs for user: {user_id}")
-            else:
-                # Single PDF ID
-                filter_query = {"user_id": user_id, "pdf_id": pdf_id}
-                print(f"🔍 Searching for PDF ID: {pdf_id}")
-        else:
-            # Get all documents for this user
-            filter_query = {"user_id": user_id}
-            print(f"🔍 Searching all PDFs for user: {user_id}")
-
-        # Get documents
-        user_docs = list(collection.find(filter_query))
-
-        # Score documents based on keyword matches
-        scored_docs = []
-        for doc in user_docs:
-            content = doc.get("page_content", "").lower()
-            # Count keyword matches
-            score = sum(1 for keyword in keywords if keyword in content)
-            scored_docs.append((score, doc))
-
-        # Sort by score (descending) and take top k
-        scored_docs.sort(reverse=True, key=lambda x: x[0])
-        top_docs = [doc for _, doc in scored_docs[:k]]
-
-        # Convert to Document objects
-        results = []
-        for doc in top_docs:
-            results.append(Document(
-                page_content=doc.get("page_content", ""),
-                metadata={
-                    "user_id": doc.get("user_id"),
-                    "pdf_id": doc.get("pdf_id"),
-                    "chunk_id": doc.get("chunk_id"),
-                    "pdf_name": doc.get("pdf_name", "")
-                }
-            ))
-
-        print(f"✅ Found {len(results)} relevant PDF pages using direct search")
-        return results
-    except Exception as e:
-        print(f"❌ Error searching PDF content: {e}")
+        # Return empty results instead of falling back to non-vector search
+        print("❌ Vector search failed. No fallback to direct content search available.")
         return []
 
+
+
 def search_financial_knowledge_base(query: str, k: int = 5) -> List[Document]:
-    """Search the general financial knowledge base."""
+    """Search the general financial knowledge base using MongoDB Atlas Vector Search with direct aggregation."""
     try:
-        # Check if numpy is available
-        try:
-            import numpy
-        except ImportError:
-            print("❌ NumPy is not available, falling back to direct content search")
-            return search_knowledge_base_without_vectors(query, k)
+        # Import numpy - required for vector operations
+        import numpy as np
+        print("✅ Using vector search for financial knowledge base")
 
         # Initialize embeddings
         embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
 
         # Get MongoDB client
         if USE_MOCK_DB:
-            print("⚠️ Using mock DB, knowledge base search not available")
+            print("❌ MongoDB connection not available. Knowledge base search requires MongoDB Atlas.")
             return []
 
         # Get MongoDB database
         db = get_database()
         collection = db["financial_knowledge"]
 
-        # Create vector store
-        vector_store = MongoDBAtlasVectorSearch(
-            collection,
-            embeddings,
-            index_name="financial_knowledge_index"
-        )
+        # Try direct MongoDB Atlas Vector Search using aggregation pipeline
+        try:
+            print("🔍 Using MongoDB Atlas Vector Search with direct aggregation...")
 
-        # Search
-        results = vector_store.similarity_search(query, k=k)
+            # Generate embedding for query
+            query_embedding = embeddings.embed_query(query)
 
-        return results
+            # Create aggregation pipeline
+            pipeline = [
+                {
+                    "$vectorSearch": {
+                        "index": "financial_knowledge_index",
+                        "path": "embedding",
+                        "queryVector": query_embedding,
+                        "numCandidates": k * 10,  # Get more candidates for better results
+                        "limit": k
+                    }
+                },
+                {
+                    "$project": {
+                        "_id": 0,
+                        "page_content": 1,
+                        "metadata": 1,
+                        "title": 1,
+                        "doc_id": 1,
+                        "score": {"$meta": "vectorSearchScore"}
+                    }
+                }
+            ]
+
+            # Execute aggregation
+            results_cursor = collection.aggregate(pipeline)
+            results_list = list(results_cursor)
+
+            print(f"✅ Found {len(results_list)} relevant documents in financial knowledge base")
+
+            # Convert to Document objects
+            results = []
+            for doc in results_list:
+                # Create metadata dictionary
+                metadata = doc.get("metadata", {})
+
+                # Add title and doc_id to metadata if they exist at the top level
+                if "title" in doc:
+                    metadata["title"] = doc["title"]
+                if "doc_id" in doc:
+                    metadata["doc_id"] = doc["doc_id"]
+
+                results.append(Document(
+                    page_content=doc.get("page_content", ""),
+                    metadata=metadata
+                ))
+
+            return results
+        except Exception as e:
+            print(f"❌ Error searching knowledge base: {e}")
+            import traceback
+            traceback.print_exc()
+            # Return empty results instead of falling back to non-vector search
+            print("❌ Knowledge base vector search failed. No fallback available.")
+            return []
     except Exception as e:
         print(f"❌ Error searching knowledge base: {e}")
         import traceback
         traceback.print_exc()
-        # Try alternative approach
-        return search_knowledge_base_without_vectors(query, k)
-
-def search_knowledge_base_without_vectors(query: str, k: int = 5) -> List[Document]:
-    """Search financial knowledge base directly without using vectors."""
-    try:
-        print("🔍 Searching knowledge base without vectors")
-
-        # Get MongoDB client
-        if USE_MOCK_DB:
-            print("⚠️ Using mock DB, knowledge base search not available")
-            return []
-
-        # Get MongoDB database
-        db = get_database()
-        collection = db["financial_knowledge"]
-
-        # Simple text search (not as effective as vector search)
-        # Split query into words for basic keyword matching
-        keywords = query.lower().split()
-
-        # Get all documents
-        all_docs = list(collection.find())
-
-        # Score documents based on keyword matches
-        scored_docs = []
-        for doc in all_docs:
-            content = doc.get("page_content", "").lower()
-            score = sum(1 for keyword in keywords if keyword in content)
-            scored_docs.append((score, doc))
-
-        # Sort by score (descending) and take top k
-        scored_docs.sort(reverse=True, key=lambda x: x[0])
-        top_docs = [doc for _, doc in scored_docs[:k]]
-
-        # Convert to Document objects
-        results = []
-        for doc in top_docs:
-            results.append(Document(
-                page_content=doc.get("page_content", ""),
-                metadata=doc.get("metadata", {})
-            ))
-
-        print(f"✅ Found {len(results)} relevant knowledge base entries")
-        return results
-    except Exception as e:
-        print(f"❌ Error searching knowledge base: {e}")
+        # Return empty results instead of falling back to non-vector search
+        print("❌ Knowledge base vector search failed. No fallback available.")
         return []
+
+
 
 def remove_pdf(user_id: str, pdf_id: str = None) -> bool:
     """
@@ -736,36 +591,60 @@ def retrieve_context_node(state: TeacherAgentState) -> TeacherAgentState:
         else:
             print(f"🔍 Searching specific PDF: {pdf_id}")
 
-        # Try vector search first
+        # Use MongoDB Atlas vector search
         pdf_results = search_vector_db(current_query, user_id, pdf_id=pdf_id)
 
-        # If vector search returns no results, try direct content search
         if len(pdf_results) == 0:
-            print("⚠️ Vector search returned no results, trying direct content search")
-            pdf_results = search_pdf_content_without_vectors(current_query, user_id, k=5, pdf_id=pdf_id)
+            print("ℹ️ Vector search returned no results for the specific PDFs")
     else:
         print(f"🔍 Searching all PDFs for user: {user_id}")
 
-        # Try vector search first
+        # Use MongoDB Atlas vector search
         pdf_results = search_vector_db(current_query, user_id)
 
-        # If vector search returns no results, try direct content search
         if len(pdf_results) == 0:
-            print("⚠️ Vector search returned no results, trying direct content search")
-            pdf_results = search_pdf_content_without_vectors(current_query, user_id, k=5)
+            print("ℹ️ Vector search returned no results across all user PDFs")
 
     # Search financial knowledge base
     kb_results = search_financial_knowledge_base(current_query)
 
-    # Combine results
-    all_results = pdf_results + kb_results
+    # Get PDF metadata if available
+    pdf_metadata = None
+    if pdf_id and len(pdf_results) > 0:
+        try:
+            # Get MongoDB database
+            db = get_database()
+            # Check if db is None explicitly
+            if db is not None:
+                # Get PDF metadata
+                if isinstance(pdf_id, list) and len(pdf_id) > 0:
+                    # Use the first PDF ID if multiple are provided
+                    metadata = db["pdf_metadata"].find_one({"pdf_id": pdf_id[0]})
+                else:
+                    metadata = db["pdf_metadata"].find_one({"pdf_id": pdf_id})
+
+                if metadata:
+                    pdf_metadata = metadata
+                    print(f"✅ Found metadata for PDF: {metadata.get('pdf_name', 'Unknown')}")
+        except Exception as e:
+            print(f"⚠️ Could not retrieve PDF metadata: {e}")
+
+    # Prioritize PDF results over knowledge base results
+    # If we have PDF results, use fewer knowledge base results
+    if len(pdf_results) > 0:
+        # Use all PDF results and fewer knowledge base results
+        all_results = pdf_results + kb_results[:2]  # Limit knowledge base results
+    else:
+        # If no PDF results, use more knowledge base results
+        all_results = kb_results
 
     print(f"✅ Found {len(pdf_results)} PDF results and {len(kb_results)} knowledge base results for query: '{current_query}'")
 
-    # Update state
+    # Update state with both results and metadata
     return {
         **state,
-        "vector_search_results": all_results
+        "vector_search_results": all_results,
+        "pdf_metadata": pdf_metadata
     }
 
 def generate_response_node(state: TeacherAgentState) -> TeacherAgentState:
@@ -776,8 +655,71 @@ def generate_response_node(state: TeacherAgentState) -> TeacherAgentState:
 
     # Format context from vector search
     context = ""
-    if state.get("vector_search_results"):
-        context = "\n\n".join([doc.page_content for doc in state["vector_search_results"]])
+
+    # Add PDF metadata if available
+    pdf_metadata = state.get("pdf_metadata")
+    if pdf_metadata:
+        pdf_name = pdf_metadata.get("pdf_name", "Unknown")
+        context += f"CURRENT PDF: {pdf_name}\n\n"
+        print(f"📄 Added PDF name to context: {pdf_name}")
+    else:
+        print("⚠️ No PDF metadata available")
+
+    # Add PDF ID if available
+    pdf_id = state.get("pdf_id")
+    if pdf_id:
+        if isinstance(pdf_id, list):
+            context += f"PDF ID(s): {', '.join(pdf_id)}\n\n"
+            print(f"📄 Added PDF IDs to context: {', '.join(pdf_id)}")
+        else:
+            context += f"PDF ID: {pdf_id}\n\n"
+            print(f"📄 Added PDF ID to context: {pdf_id}")
+
+    # Add vector search results
+    vector_results = state.get("vector_search_results")
+    print(f"📄 Vector results available: {vector_results is not None}")
+    print(f"📄 Vector results count: {len(vector_results) if vector_results else 0}")
+
+    if vector_results and len(vector_results) > 0:
+        # Filter for PDF results
+        pdf_results = []
+        kb_results = []
+
+        for doc in vector_results:
+            # Check if this is a PDF result (has metadata.pdf_id)
+            if doc.metadata and "pdf_id" in doc.metadata:
+                pdf_results.append(doc)
+            else:
+                kb_results.append(doc)
+
+        print(f"📄 PDF results count: {len(pdf_results)}")
+        print(f"📄 KB results count: {len(kb_results)}")
+
+        # Add PDF results first
+        if pdf_results:
+            context += "CONTENT FROM CURRENT PDF:\n"
+            pdf_content = "\n\n".join([doc.page_content for doc in pdf_results])
+            context += pdf_content
+            context += "\n\n"
+            print(f"📄 Added PDF content to context: {pdf_content[:100]}...")
+        else:
+            print("⚠️ No PDF results to add to context")
+
+        # Add knowledge base results if needed
+        if kb_results and (not pdf_results or len(pdf_results) < 2):
+            context += "ADDITIONAL FINANCIAL KNOWLEDGE:\n"
+            kb_content = "\n\n".join([doc.page_content for doc in kb_results[:2]])
+            context += kb_content
+            print(f"📄 Added KB content to context: {kb_content[:100]}...")
+
+    # If no context was added, add a note
+    if not context.strip():
+        context = "No relevant content found in the specified PDF."
+        print("⚠️ No context was added, using fallback message")
+
+    # Print the final context for debugging
+    print(f"📄 Final context length: {len(context)}")
+    print(f"📄 Final context preview: {context[:200]}...")
 
     # Format chat history - we'll keep it for context but ensure the model prioritizes the current query
     formatted_history = []
@@ -796,7 +738,10 @@ When explaining terms, avoid jargon and break down concepts step by step.
 If you're not sure about something, be honest about it rather than making up information.
 
 CRITICAL INSTRUCTION: You are answering this specific question: "{current_query}"
-While you can use the chat history for context, you MUST respond ONLY to the current question.
+You MUST prioritize the context from the CURRENT PDF being queried over any previous conversations.
+When the user asks about content in a specific PDF (like a resume or research paper), your answer
+should be based PRIMARILY on the content found in that specific PDF.
+
 DO NOT include phrases like "User Query:" in your response.
 DO NOT repeat the question in your response.
 Just answer the question directly and conversationally.
@@ -810,20 +755,22 @@ but always maintain a conversational and educational tone.""")
         messages.extend(formatted_history[-4:])  # Include last 4 messages for context
 
     # Add the current query as the final message
-    messages.append(
-        HumanMessage(content=f"""
+    human_message_content = f"""
 ANSWER THIS QUESTION: {current_query}
 
-Relevant Context:
-{{context}}
+Relevant Context from the CURRENT PDF:
+{context}
 
 IMPORTANT REMINDER:
 1. Answer ONLY the question above: "{current_query}"
-2. Do NOT include "User Query:" in your response
-3. Do NOT repeat the question in your response
-4. Just answer directly and conversationally
-""")
-    )
+2. Base your answer PRIMARILY on the context provided above from the CURRENT PDF
+3. If asked about a specific document (like a resume), ONLY mention information that is explicitly in the context
+4. Do NOT include "User Query:" in your response
+5. Do NOT repeat the question in your response
+6. Just answer directly and conversationally
+"""
+    print(f"📝 Human message content preview: {human_message_content[:200]}...")
+    messages.append(HumanMessage(content=human_message_content))
 
     prompt = ChatPromptTemplate.from_messages(messages)
 
@@ -838,12 +785,22 @@ IMPORTANT REMINDER:
         # Log the exact query being sent to the LLM
         print(f"📝 Sending query to LLM: '{current_query}'")
 
+        # Debug the context being sent to the LLM
+        print(f"📝 Context being sent to LLM (length: {len(context)})")
+
+        # Create a dictionary with the context
+        input_dict = {"context": context}
+
+        # Debug the input dictionary
+        print(f"📝 Input dictionary keys: {input_dict.keys()}")
+        print(f"📝 Context key exists: {'context' in input_dict}")
+        print(f"📝 Context value type: {type(input_dict['context'])}")
+
         # Pass the context - the query and chat history are already in the prompt
-        result = chain.invoke({
-            "context": context
-        })
+        result = chain.invoke(input_dict)
 
         print(f"✅ LLM response generated for query: '{current_query}'")
+        print(f"✅ LLM response: {result.content[:100]}...")
 
         # Update state
         return {
@@ -929,6 +886,7 @@ def run_teacher_agent(user_query: str, user_id: str, chat_history: List[Dict[str
         "pdf_path": None,
         "pdf_id": pdf_id,  # Include PDF ID if provided
         "pdf_content": None,
+        "pdf_metadata": None,  # Will be populated during context retrieval
         "vector_search_results": None,
         "response": None
     }
@@ -972,7 +930,7 @@ def run_teacher_agent(user_query: str, user_id: str, chat_history: List[Dict[str
 # Function to process and store a PDF
 def handle_pdf_upload(pdf_path: str, user_id: str) -> dict:
     """
-    Process and store a PDF for a user.
+    Process and store a PDF for a user using MongoDB Atlas Vector Search.
 
     Args:
         pdf_path: Path to the PDF file
@@ -993,18 +951,25 @@ def handle_pdf_upload(pdf_path: str, user_id: str) -> dict:
             print("❌ No documents extracted from PDF")
             return {"success": False, "pdf_id": "", "message": "No documents extracted from PDF"}
 
-        # Vectorize and store
-        pdf_id = vectorize_and_store_pdf(documents, user_id, pdf_name)
+        # Vectorize and store in MongoDB Atlas
+        try:
+            pdf_id = vectorize_and_store_pdf(documents, user_id, pdf_name)
 
-        if pdf_id:
             return {
                 "success": True,
                 "pdf_id": pdf_id,
                 "message": f"Successfully processed and stored PDF: {pdf_name}",
                 "chunk_count": len(documents)
             }
-        else:
-            return {"success": False, "pdf_id": "", "message": "Failed to store PDF"}
+        except ValueError as ve:
+            # Handle specific vectorization errors
+            print(f"❌ Error vectorizing PDF: {ve}")
+            return {
+                "success": False,
+                "pdf_id": "",
+                "message": f"Failed to vectorize PDF: {str(ve)}. MongoDB Atlas is required for vector storage."
+            }
+
     except Exception as e:
         print(f"❌ Error in handle_pdf_upload: {e}")
         import traceback

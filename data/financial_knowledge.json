@@ -1,0 +1,127 @@
+[
+  {
+    "topic": "Budgeting",
+    "category": "Personal Finance",
+    "content": "Budgeting is the process of creating a plan to spend your money. This spending plan is called a budget. Creating a budget allows you to determine in advance whether you will have enough money to do the things you need to do or would like to do. Budgeting is simply balancing your expenses with your income."
+  },
+  {
+    "topic": "Emergency Fund",
+    "category": "Personal Finance",
+    "content": "An emergency fund is money you set aside to pay for unexpected expenses. The purpose of an emergency fund is to improve financial security by creating a safety net that can be used to meet unanticipated expenses, such as an illness or major home repairs. Ideally, emergency funds should contain enough money to cover three to six months of expenses."
+  },
+  {
+    "topic": "Compound Interest",
+    "category": "Investing",
+    "content": "Compound interest is the interest on a loan or deposit calculated based on both the initial principal and the accumulated interest from previous periods. Thought to have originated in 17th-century Italy, compound interest can be thought of as 'interest on interest,' and will make a sum grow at a faster rate than simple interest, which is calculated only on the principal amount."
+  },
+  {
+    "topic": "Stock Market",
+    "category": "Investing",
+    "content": "The stock market refers to the collection of markets and exchanges where regular activities of buying, selling, and issuance of shares of publicly-held companies take place. Such financial activities are conducted through institutionalized formal exchanges or over-the-counter (OTC) marketplaces which operate under a defined set of regulations."
+  },
+  {
+    "topic": "Mutual Funds",
+    "category": "Investing",
+    "content": "A mutual fund is a type of financial vehicle made up of a pool of money collected from many investors to invest in securities like stocks, bonds, money market instruments, and other assets. Mutual funds are operated by professional money managers, who allocate the fund's assets and attempt to produce capital gains or income for the fund's investors."
+  },
+  {
+    "topic": "ETFs",
+    "category": "Investing",
+    "content": "An exchange-traded fund (ETF) is a type of investment fund and exchange-traded product, i.e., they are traded on stock exchanges. ETFs are similar in many ways to mutual funds, except that ETFs are bought and sold throughout the day on stock exchanges while mutual funds are bought and sold based on their price at day's end."
+  },
+  {
+    "topic": "Retirement Planning",
+    "category": "Personal Finance",
+    "content": "Retirement planning is the process of determining retirement income goals, and the actions and decisions necessary to achieve those goals. Retirement planning includes identifying sources of income, estimating expenses, implementing a savings program, and managing assets and risk. Future cash flows are estimated to determine if the retirement income goal will be achieved."
+  },
+  {
+    "topic": "401(k)",
+    "category": "Retirement",
+    "content": "A 401(k) is a retirement savings plan sponsored by an employer. It lets workers save and invest a piece of their paycheck before taxes are taken out. Taxes aren't paid until the money is withdrawn from the account. 401(k) plans are named for the section of the tax code that governs them."
+  },
+  {
+    "topic": "IRA",
+    "category": "Retirement",
+    "content": "An Individual Retirement Account (IRA) is a tax-advantaged investing tool that individuals use to earmark funds for retirement savings. There are several types of IRAs as of 2020: Traditional IRAs, Roth IRAs, SEP IRAs, and SIMPLE IRAs. Traditional and Roth IRAs are created by individual taxpayers. SEP and SIMPLE IRAs are implemented by small business owners and self-employed individuals."
+  },
+  {
+    "topic": "Credit Score",
+    "category": "Credit",
+    "content": "A credit score is a numerical expression based on a level analysis of a person's credit files, to represent the creditworthiness of an individual. A credit score is primarily based on a credit report, information typically sourced from credit bureaus. Lenders, such as banks and credit card companies, use credit scores to evaluate the potential risk posed by lending money to consumers."
+  },
+  {
+    "topic": "Mortgage",
+    "category": "Real Estate",
+    "content": "A mortgage is a loan in which property or real estate is used as collateral. The borrower enters into an agreement with the lender (usually a bank) wherein the borrower receives cash upfront then makes payments over a set time span until he pays back the lender in full. A mortgage is often referred to as home loan when its used for the purchase of a home."
+  },
+  {
+    "topic": "Inflation",
+    "category": "Economics",
+    "content": "Inflation is the rate at which the general level of prices for goods and services is rising and, consequently, the purchasing power of currency is falling. Central banks attempt to limit inflation — and avoid deflation — in order to keep the economy running smoothly."
+  },
+  {
+    "topic": "Diversification",
+    "category": "Investing",
+    "content": "Diversification is a risk management strategy that mixes a wide variety of investments within a portfolio. The rationale behind this technique is that a portfolio constructed of different kinds of assets will, on average, yield higher long-term returns and lower the risk of any individual holding or security."
+  },
+  {
+    "topic": "Asset Allocation",
+    "category": "Investing",
+    "content": "Asset allocation is an investment strategy that aims to balance risk and reward by apportioning a portfolio's assets according to an individual's goals, risk tolerance, and investment horizon. The three main asset classes - equities, fixed-income, and cash and equivalents - have different levels of risk and return, so each will behave differently over time."
+  },
+  {
+    "topic": "Tax-Loss Harvesting",
+    "category": "Tax Planning",
+    "content": "Tax-loss harvesting is a strategy used to lower your tax bill by selling investments that have lost value. The loss from the sale can be used to offset capital gains from other investments, reducing your tax liability. This strategy is typically used in taxable investment accounts, not tax-advantaged accounts like IRAs or 401(k)s."
+  },
+  {
+    "topic": "Dollar-Cost Averaging",
+    "category": "Investing",
+    "content": "Dollar-cost averaging is an investment strategy in which an investor divides up the total amount to be invested across periodic purchases of a target asset in an effort to reduce the impact of volatility on the overall purchase. The purchases occur regardless of the asset's price and at regular intervals."
+  },
+  {
+    "topic": "Risk Tolerance",
+    "category": "Investing",
+    "content": "Risk tolerance is the degree of variability in investment returns that an investor is willing to withstand. Risk tolerance is an important component in investing. You should have a realistic understanding of your ability and willingness to stomach large swings in the value of your investments."
+  },
+  {
+    "topic": "Debt-to-Income Ratio",
+    "category": "Credit",
+    "content": "The debt-to-income (DTI) ratio is a personal finance measure that compares an individual's monthly debt payment to their monthly gross income. Your DTI ratio is all your monthly debt payments divided by your gross monthly income. This number is one way lenders measure your ability to manage the payments you make every month to repay the money you have borrowed."
+  },
+  {
+    "topic": "Roth IRA",
+    "category": "Retirement",
+    "content": "A Roth IRA is an individual retirement account that offers tax-free growth and tax-free withdrawals in retirement. Roth IRA rules dictate that as long as you've owned your account for 5 years and you're age 59½ or older, you can withdraw your money when you want to and you won't owe federal taxes on your withdrawals."
+  },
+  {
+    "topic": "Capital Gains",
+    "category": "Tax Planning",
+    "content": "A capital gain is a rise in the value of a capital asset (investment or real estate) that gives it a higher worth than the purchase price. The gain is not realized until the asset is sold. A capital gain may be short-term (one year or less) or long-term (more than one year) and must be claimed on income taxes."
+  },
+  {
+    "topic": "Bonds",
+    "category": "Investing",
+    "content": "A bond is a fixed income instrument that represents a loan made by an investor to a borrower (typically corporate or governmental). A bond could be thought of as an I.O.U. between the lender and borrower that includes the details of the loan and its payments. Bonds are used by companies, municipalities, states, and sovereign governments to finance projects and operations."
+  },
+  {
+    "topic": "P/E Ratio",
+    "category": "Investing",
+    "content": "The price-to-earnings ratio (P/E ratio) is the ratio for valuing a company that measures its current share price relative to its per-share earnings (EPS). The price-to-earnings ratio is also sometimes known as the price multiple or the earnings multiple. P/E ratios are used by investors and analysts to determine the relative value of a company's shares in an apples-to-apples comparison."
+  },
+  {
+    "topic": "Dividend",
+    "category": "Investing",
+    "content": "A dividend is the distribution of a portion of a company's earnings, decided by the board of directors, to a class of its shareholders. Dividends can be issued as cash payments, as shares of stock, or other property. Dividends provide an incentive to own stock in stable companies even if they are not experiencing much growth."
+  },
+  {
+    "topic": "FICO Score",
+    "category": "Credit",
+    "content": "A FICO score is a credit score created by the Fair Isaac Corporation (FICO). Lenders use borrowers' FICO scores along with other details on borrowers' credit reports to assess credit risk and determine whether to extend credit. FICO scores take into account various factors in five areas to determine credit worthiness: payment history, current level of indebtedness, types of credit used, length of credit history, and new credit accounts."
+  },
+  {
+    "topic": "Amortization",
+    "category": "Real Estate",
+    "content": "Amortization is paying off a debt over time in equal installments. Part of each payment goes toward the loan principal, and part goes toward interest. With mortgage loans, a higher percentage of the monthly payment goes toward interest early in the loan. With each subsequent payment, a greater percentage of the payment goes toward the loan's principal."
+  }
+]
