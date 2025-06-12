@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 from typing import List, Dict, Any, Optional, Union
 import json
+import uvicorn
 import os
 import uuid
 import shutil
@@ -786,22 +787,23 @@ async def pdf_removal_endpoint(request: PDFRemovalRequest):
 
 @app.get("/pdf/list")
 async def pdf_list_endpoint(user_id: str):
-    """List all PDFs for a user"""
     try:
-        # Get MongoDB database
-        from database.mongodb_client import get_database
-        db = get_database()
-
-        # Get all PDFs for this user
-        pdf_docs = list(db["pdf_metadata"].find({"user_id": user_id}))
-
-        # Convert ObjectId to string
-        for doc in pdf_docs:
-            if "_id" in doc:
-                doc["_id"] = str(doc["_id"])
-
+        pdf_docs = []
+        # List all PDFs for the user
+        if user_id:
+            pdf_docs = list(
+                pdf_collection.find(
+                    {"user_id": user_id},
+                    {"_id": 0, "pdf_id": 1, "filename": 1, "uploaded_at": 1}
+                )
+            )
+            
+            # Convert ObjectId to string
+            for doc in pdf_docs:
+                doc["pdf_id"] = str(doc["pdf_id"])
+                doc["uploaded_at"] = doc["uploaded_at"].isoformat()
+        
         return {
-            "status": "success",
             "user_id": user_id,
             "pdf_count": len(pdf_docs),
             "pdfs": pdf_docs
@@ -813,8 +815,13 @@ async def pdf_list_endpoint(user_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 def main():
-    import uvicorn
-    uvicorn.run("langgraph_api:app", host="192.168.0.86", port=8000, reload=False)
+    try:
+        uvicorn.run("langgraph_api:app",host="192.168.3.104",port=8000,reload=False)
+    except Exception as e:
+        print(f"❌ Error starting server: {e}")
+        import traceback
+        traceback.print_exc()
+        raise
 
 # If you want to run with `python langgraph_api.py`
 if __name__ == "__main__":
