@@ -22,4 +22,4 @@ env/
 .vscode/
 
 # Jupyter Notebook checkpoints
-.ipynb_checkpoints/
+.ipynb_checkpoints/langchain_venv/
