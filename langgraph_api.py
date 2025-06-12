@@ -196,10 +196,20 @@ def run_simulation_background(task_id: str, user_inputs: dict, simulation_steps:
         simulation_tasks[task_id]["status"] = "running"
 
         # Generate a simulation ID
-        from database.mongodb_client import generate_simulation_id
-        simulation_id = generate_simulation_id()
+        from database.mongodb_client import (
+            save_user_input,
+            save_agent_output,
+            get_previous_month_outputs,
+            get_agent_outputs_for_month,
+            generate_simulation_id
+        )
+
+        # Initialize MongoDB collections
+        pdf_collection = get_database()["pdf_metadata"]
+        chunks_collection = get_database()["pdf_chunks"]
 
         # Store simulation_id in task details
+        simulation_id = generate_simulation_id()
         simulation_tasks[task_id]["simulation_id"] = simulation_id
         print(f"📝 Simulation ID: {simulation_id} for task {task_id}")
 
@@ -788,24 +798,20 @@ async def pdf_removal_endpoint(request: PDFRemovalRequest):
 @app.get("/pdf/list")
 async def pdf_list_endpoint(user_id: str):
     try:
-        pdf_docs = []
-        # List all PDFs for the user
-        if user_id:
-            pdf_docs = list(
-                pdf_collection.find(
-                    {"user_id": user_id},
-                    {"_id": 0, "pdf_id": 1, "filename": 1, "uploaded_at": 1}
-                )
-            )
-            
-            # Convert ObjectId to string
-            for doc in pdf_docs:
-                doc["pdf_id"] = str(doc["pdf_id"])
-                doc["uploaded_at"] = doc["uploaded_at"].isoformat()
+        # Get MongoDB database
+        from database.mongodb_client import get_database
+        db = get_database()
         
+        # Get all PDFs for this user
+        pdf_docs = list(db["pdf_metadata"].find({"user_id": user_id}))
+
+        # Convert ObjectId to string
+        for doc in pdf_docs:
+            if "_id" in doc:
+                doc["_id"] = str(doc["_id"])
+
         return {
-            "user_id": user_id,
-            "pdf_count": len(pdf_docs),
+            "status": "success",
             "pdfs": pdf_docs
         }
     except Exception as e:
