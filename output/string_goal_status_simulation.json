@@ -1,0 +1,148 @@
+[
+    {
+        "goals": {
+            "emergency_fund": {
+                "target": 1000,
+                "cumulative_progress": 800,
+                "trend": "behind",
+                "adjustment": "Increase monthly allocation by 5% to get back on track"
+            },
+            "retirement_savings": {
+                "target": 500,
+                "cumulative_progress": 420,
+                "trend": "stagnant",
+                "adjustment": "Review investment options to optimize returns"
+            },
+            "vacation_fund": {
+                "target": 2000,
+                "cumulative_progress": 1800,
+                "trend": "ahead",
+                "adjustment": "Maintain current allocation and consider increasing target"
+            }
+        },
+        "month": 1
+    },
+    {
+        "goals": {
+            "emergency_fund": {
+                "target": 1000,
+                "cumulative_progress": 840,
+                "trend": "improving",
+                "adjustment": "Continue increasing monthly allocation by 5% to maintain momentum"
+            },
+            "retirement_savings": {
+                "target": 500,
+                "cumulative_progress": 440,
+                "trend": "stagnant",
+                "adjustment": "Schedule a review of investment options to optimize returns and consider increasing monthly allocation"
+            },
+            "vacation_fund": {
+                "target": 2000,
+                "cumulative_progress": 2000,
+                "trend": "on_track",
+                "adjustment": "Congratulations on reaching the target! Consider setting a new target or allocating excess funds to other goals"
+            }
+        },
+        "month": 2
+    },
+    {
+        "month": 3
+    },
+    {
+        "goals": [
+            {
+                "month": 4,
+                "status": "on_track",
+                "cumulative_savings": 1000,
+                "cumulative_allocations": 800,
+                "target": 1200,
+                "adjustment_suggestion": "Increase allocation by 10% to stay on track",
+                "trend": "improving",
+                "historical_performance": "consistent",
+                "reward": "Congratulations on consistent progress! Keep up the good work!"
+            }
+        ],
+        "month": 4
+    },
+    {
+        "month": 5,
+        "timestamp": "2025-06-12T13:00:09.476875",
+        "goals": {
+            "emergency_fund": {
+                "target": 10000.0,
+                "current": 6500.0,
+                "progress_percentage": 65.0,
+                "monthly_contribution": 500.0,
+                "estimated_completion": "Month 12",
+                "status": "on_track"
+            },
+            "vacation_fund": {
+                "target": 2000.0,
+                "current": 1200.0,
+                "progress_percentage": 60.0,
+                "monthly_contribution": 200.0,
+                "estimated_completion": "Month 9",
+                "status": "on_track"
+            },
+            "retirement_savings": {
+                "target": 5000.0,
+                "current": 2000.0,
+                "progress_percentage": 40.0,
+                "monthly_contribution": 300.0,
+                "estimated_completion": "Month 15",
+                "status": "on_track"
+            }
+        },
+        "trends": {
+            "emergency_fund": "improving",
+            "vacation_fund": "steady",
+            "retirement_savings": "improving"
+        },
+        "overall_progress": "Good progress across all financial goals",
+        "recommendations": [
+            "Consider increasing retirement contributions by 5%",
+            "Maintain current emergency fund contribution rate"
+        ]
+    },
+    {
+        "month": 6,
+        "timestamp": "2025-07-12T13:00:09.476875",
+        "goals": {
+            "emergency_fund": {
+                "target": 10000.0,
+                "current": 7000.0,
+                "progress_percentage": 70.0,
+                "monthly_contribution": 500.0,
+                "estimated_completion": "Month 11",
+                "status": "on_track"
+            },
+            "vacation_fund": {
+                "target": 2000.0,
+                "current": 1400.0,
+                "progress_percentage": 70.0,
+                "monthly_contribution": 200.0,
+                "estimated_completion": "Month 8",
+                "status": "on_track"
+            },
+            "retirement_savings": {
+                "target": 5000.0,
+                "current": 2500.0,
+                "progress_percentage": 50.0,
+                "monthly_contribution": 300.0,
+                "estimated_completion": "Month 14",
+                "status": "on_track"
+            }
+        },
+        "trends": {
+            "emergency_fund": "improving",
+            "vacation_fund": "improving",
+            "retirement_savings": "improving"
+        },
+        "overall_progress": "Excellent progress across all financial goals",
+        "recommendations": [
+            "Consider increasing retirement contributions by 10%",
+            "Maintain current emergency fund contribution rate",
+            "Reward yourself for consistent progress toward vacation fund!"
+        ]
+    }
+]

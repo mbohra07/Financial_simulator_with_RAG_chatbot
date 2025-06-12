@@ -1,0 +1,86 @@
+[
+    {
+        "financial_discipline_score": 0.7,
+        "improvement_areas": [
+            "reduce_unnecessary_debt"
+        ],
+        "recommended_actions": [
+            "review_expenses",
+            "adjust_budget"
+        ],
+        "historical_trend": "improving",
+        "next_month_target": 0.8,
+        "month": 1
+    },
+    {
+        "financial_discipline_score": 0.85,
+        "improvement_areas": [
+            "maintain_target_savings",
+            "avoid_overspending"
+        ],
+        "recommended_actions": [
+            "review_expenses",
+            "adjust_budget",
+            "consider_investment_options"
+        ],
+        "historical_trend": "improving",
+        "next_month_target": 0.9,
+        "month": 2
+    },
+    {
+        "financial_discipline_score": 0.92,
+        "improvement_areas": [
+            "maintain_target_savings"
+        ],
+        "recommended_actions": [
+            "review_expenses",
+            "adjust_budget",
+            "consider_investment_options",
+            "avoid_impulse_purchases"
+        ],
+        "historical_trend": "improving",
+        "next_month_target": 0.95,
+        "month": 3
+    },
+    {
+        "financial_discipline_score": 0.88,
+        "improvement_areas": [
+            "avoid_impulse_purchases",
+            "review_expenses"
+        ],
+        "recommended_actions": [
+            "adjust_budget",
+            "consider_investment_options",
+            "avoid_unnecessary_debt",
+            "review_expenses_again"
+        ],
+        "historical_trend": "regressing",
+        "next_month_target": 0.9,
+        "month": 4
+    },
+    {
+        "financial_discipline_score": 0.92,
+        "improvement_areas": [
+            "review_expenses"
+        ],
+        "recommended_actions": [
+            "consider_investment_options",
+            "review_expenses_again",
+            "avoid_unnecessary_debt"
+        ],
+        "historical_trend": "improving",
+        "next_month_target": 0.94,
+        "month": 5
+    },
+    {
+        "financial_discipline_score": 0.95,
+        "improvement_areas": [],
+        "recommended_actions": [
+            "maintain_current_savings_rate",
+            "explore_tax_optimization_strategies"
+        ],
+        "historical_trend": "improving",
+        "next_month_target": 0.96,
+        "month": 6
+    }
+]

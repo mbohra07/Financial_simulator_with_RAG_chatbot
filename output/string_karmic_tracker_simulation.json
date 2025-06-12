@@ -1,0 +1,50 @@
+[
+    {
+        "karma_score": 60,
+        "sattvic_traits": 40,
+        "tamasic_traits": 20,
+        "rajasic_traits": 40,
+        "karma_trend": "Neutral",
+        "month": 1
+    },
+    {
+        "karma_score": 65,
+        "sattvic_traits": 45,
+        "tamasic_traits": 15,
+        "rajasic_traits": 40,
+        "karma_trend": "Improving",
+        "month": 2
+    },
+    {
+        "karma_score": 70,
+        "sattvic_traits": 50,
+        "tamasic_traits": 10,
+        "rajasic_traits": 40,
+        "karma_trend": "Improving",
+        "month": 3
+    },
+    {
+        "karma_score": 75,
+        "sattvic_traits": 55,
+        "tamasic_traits": 5,
+        "rajasic_traits": 40,
+        "karma_trend": "Improving",
+        "month": 4
+    },
+    {
+        "karma_score": 80,
+        "sattvic_traits": 60,
+        "tamasic_traits": 5,
+        "rajasic_traits": 35,
+        "karma_trend": "Improving",
+        "month": 5
+    },
+    {
+        "karma_score": 85,
+        "sattvic_traits": 65,
+        "rajasic_traits": 30,
+        "karma_trend": "Improving",
+        "month": 6,
+        "insights": "Continued discipline in cash flow management and goal tracking have led to a notable increase in sattvic traits. Rajasic tendencies are still present but are being balanced by growing self-awareness. The user has successfully improved their karma over the past month, demonstrating a clear understanding of what works and what doesn't."
+    }
+]

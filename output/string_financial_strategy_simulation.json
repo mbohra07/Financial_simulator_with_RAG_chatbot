@@ -1,0 +1,86 @@
+[
+    {
+        "recommendations": [
+            {
+                "title": "Optimize Emergency Fund",
+                "description": "Increase savings rate by 5% to reach 3-6 months' expenses in the next 6 months.",
+                "reasoning": "User's cash flow shows a consistent income, but the emergency fund is below target. Increasing the savings rate will help build a cushion against unexpected expenses."
+            },
+            {
+                "title": "Reduce Dining Out Expenses",
+                "description": "Reduce dining out expenses by 20% to free up $200/month for savings and debt repayment.",
+                "reasoning": "User's behavior result indicates overspending in dining out, which can be optimized to allocate funds towards savings and debt repayment."
+            },
+            {
+                "title": "Rebalance Investment Portfolio",
+                "description": "Rebalance investment portfolio to maintain a 60% stock and 40% bond allocation to minimize risk and maximize returns.",
+                "reasoning": "User's goal tracking result shows a high-risk investment portfolio, which can be optimized to minimize risk and maximize returns."
+            }
+        ],
+        "month": 1
+    },
+    {
+        "recommendations": [
+            {
+                "category": "savings",
+                "Increase Emergency Fund": "Allocate 10% of monthly income to savings, considering the recent income increase and stable cash flow."
+            },
+            {
+                "category": "investments",
+                "Diversify Portfolio": "Rebalance investment portfolio to minimize risk, given the recent market volatility, by allocating 20% to low-risk assets."
+            },
+            {
+                "category": "expenses",
+                "Optimize Essential Expenses": "Review and adjust essential expenses, such as housing and transportation, to ensure they do not exceed 50% of monthly expenses."
+            }
+        ],
+        "month": 3
+    },
+    {
+        "recommendations": [
+            {
+                "category": "savings",
+                "Enhance Emergency Fund": "Allocate 12% of monthly income to savings, considering the continued income stability and cash flow improvement."
+            },
+            {
+                "category": "investments",
+                "Optimize Risk Management": "Rebalance investment portfolio to minimize risk, given the recent market stabilization, by allocating 25% to low-risk assets and 10% to high-growth assets."
+            },
+            {
+                "category": "expenses",
+                "Refine Essential Expenses": "Review and adjust essential expenses, such as housing and transportation, to ensure they do not exceed 45% of monthly expenses, considering the recent optimization efforts."
+            }
+        ],
+        "month": 4
+    },
+    {
+        "recommendations": [
+            {
+                "category": "savings"
+            }
+        ],
+        "month": 5
+    },
+    {
+        "recommendations": [
+            {
+                "category": "expenses",
+                "action": "reduce",
+                "amount": 500,
+                "reason": "Overspending in entertainment category detected. Reducing expenses by $500 to get back on track."
+            },
+            {
+                "category": "savings",
+                "action": "increase",
+                "amount": 200,
+                "reason": "Savings rate is below target. Increasing savings by $200 to reach goal."
+            },
+            {
+                "category": "investments",
+                "action": "rebalance",
+                "reason": "Portfolio is too aggressive. Rebalancing investments to reduce risk and align with goals."
+            }
+        ],
+        "month": 6
+    }
+]

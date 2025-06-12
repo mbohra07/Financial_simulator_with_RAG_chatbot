@@ -16,6 +16,7 @@ import uuid
 import shutil
 from pathlib import Path
 from dotenv import load_dotenv
+import uvicorn
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import agentops
@@ -201,12 +202,14 @@ def run_simulation_background(task_id: str, user_inputs: dict, simulation_steps:
             save_agent_output,
             get_previous_month_outputs,
             get_agent_outputs_for_month,
-            generate_simulation_id
+            generate_simulation_id,
+            get_database
         )
 
         # Initialize MongoDB collections
-        pdf_collection = get_database()["pdf_metadata"]
-        chunks_collection = get_database()["pdf_chunks"]
+        db = get_database()
+        pdf_collection = db["pdf_metadata"]
+        chunks_collection = db["pdf_chunks"]
 
         # Store simulation_id in task details
         simulation_id = generate_simulation_id()
@@ -831,4 +834,4 @@ def main():
 
 # If you want to run with `python langgraph_api.py`
 if __name__ == "__main__":
-    main()
+    uvicorn.run("langgraph_api:app", host="192.168.3.104", port=8000, reload=False)

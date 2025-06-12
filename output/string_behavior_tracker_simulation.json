@@ -1,0 +1,62 @@
+[
+    {
+        "spending_pattern": "spender",
+        "goal_adherence": "off-track",
+        "saving_consistency": "inconsistent",
+        "labels": [
+            "high-expense-ratio",
+            "impulsive-spender"
+        ],
+        "month": 1
+    },
+    {
+        "spending_pattern": "spender",
+        "goal_adherence": "off-track",
+        "saving_consistency": "inconsistent",
+        "labels": [
+            "high-expense-ratio",
+            "impulsive-spender"
+        ],
+        "month": 2
+    },
+    {
+        "spending_pattern": "spender",
+        "goal_adherence": "off-track",
+        "saving_consistency": "inconsistent",
+        "labels": [
+            "high-expense-ratio",
+            "impulsive-spender"
+        ],
+        "month": 3
+    },
+    {
+        "spending_pattern": "spender",
+        "goal_adherence": "off-track",
+        "saving_consistency": "inconsistent",
+        "labels": [
+            "high-expense-ratio",
+            "impulsive-spender"
+        ],
+        "month": 4
+    },
+    {
+        "spending_pattern": "spender",
+        "goal_adherence": "off-track",
+        "saving_consistency": "inconsistent",
+        "labels": [
+            "high-expense-ratio",
+            "impulsive-spender"
+        ],
+        "month": 5
+    },
+    {
+        "spending_pattern": "spender",
+        "goal_adherence": "off-track",
+        "saving_consistency": "inconsistent",
+        "labels": [
+            "high-expense-ratio",
+            "impulsive-spender"
+        ],
+        "month": 6
+    }
+]
